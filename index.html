@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Asistente de Protocolos y Sesiones</title>
-    <!-- Configuración para PWA e instalación en iPhone / Android -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0f766e">
-    
+    <title>Asistente Terapéutico - Selección de Paquetes</title>
     <style>
         :root {
             --primary: #0f766e;
@@ -19,6 +14,9 @@
             --border: #cbd5e1;
             --accent: #fef2f2;
             --accent-border: #fca5a5;
+            --gold: #d97706;
+            --gold-bg: #fffbeb;
+            --gold-border: #fef3c7;
         }
 
         * {
@@ -41,28 +39,14 @@
             color: white;
             padding: 20px 16px;
             text-align: center;
+            border-radius: 0 0 12px 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; }
+        header p { margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.9; }
 
-        header p {
-            margin: 4px 0 0 0;
-            font-size: 0.8rem;
-            opacity: 0.9;
-        }
-
-        main {
-            padding: 16px;
-            max-width: 600px;
-            margin: 0 auto;
-            width: 100%;
-            flex: 1;
-        }
+        main { padding: 16px; max-width: 650px; margin: 0 auto; width: 100%; flex: 1; }
 
         .card {
             background: var(--surface);
@@ -75,7 +59,7 @@
 
         label {
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: var(--primary);
             display: block;
             margin-bottom: 6px;
@@ -87,14 +71,52 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 0.95rem;
-            background-color: #fff;
             margin-bottom: 12px;
             outline: none;
+            background-color: #fff;
         }
 
-        textarea:focus, select:focus {
+        /* Selector de Paquetes */
+        .package-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .package-card {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f1f5f9;
+        }
+
+        .package-card input[type="radio"] {
+            display: none;
+        }
+
+        .package-card.selected-basic {
             border-color: var(--primary);
-            ring: 2px var(--primary);
+            background-color: #f0fdf4;
+        }
+
+        .package-card.selected-premium {
+            border-color: var(--gold);
+            background-color: var(--gold-bg);
+        }
+
+        .package-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .package-desc {
+            font-size: 0.75rem;
+            color: #64748b;
         }
 
         .checkbox-group {
@@ -104,12 +126,7 @@
             margin-bottom: 12px;
         }
 
-        .checkbox-item {
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .checkbox-item { font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
 
         button {
             width: 100%;
@@ -124,43 +141,45 @@
             transition: background 0.2s;
         }
 
-        button:active {
-            background-color: var(--primary-dark);
-        }
+        button:active { background-color: var(--primary-dark); }
 
-        /* Resultados */
-        #result-card {
-            display: none;
-            border-left: 5px solid var(--primary);
-        }
+        #result-card { display: none; }
 
-        .res-section {
-            margin-bottom: 12px;
-        }
-
-        .res-title {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            font-weight: bold;
-            color: #64748b;
-        }
-
-        .res-value {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text);
-            margin-top: 2px;
-        }
-
-        .badge-sessions {
+        .pkg-badge {
             display: inline-block;
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 6px;
             font-weight: bold;
-            font-size: 1.1rem;
-            margin-top: 4px;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .pkg-badge.basic { background: #e0f2fe; color: #0369a1; }
+        .pkg-badge.premium { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border); }
+
+        .session-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 0.88rem;
+        }
+
+        .session-item.premium-session {
+            border-left-color: var(--gold);
+            background: #fffdf5;
+        }
+
+        .session-number {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .session-number.premium-title {
+            color: var(--gold);
         }
 
         .alert-box {
@@ -172,11 +191,7 @@
             font-size: 0.85rem;
             margin-top: 10px;
         }
-
-        .alert-box ul {
-            margin: 4px 0 0 0;
-            padding-left: 18px;
-        }
+        .alert-box ul { margin: 4px 0 0 0; padding-left: 18px; }
     </style>
 </head>
 <body>
@@ -189,13 +204,27 @@
     <main>
         <div class="card">
             <label for="problemInput">Descripción de la Dolencia / Diagnóstico:</label>
-            <textarea id="problemInput" rows="3" placeholder="Ej: Dolor lumbar agudo, parálisis facial, esguince de tobillo, rodilla post-operatoria..."></textarea>
+            <textarea id="problemInput" rows="3" placeholder="Ej: Dolor lumbar agudo, esguince de tobillo, parálisis facial..."></textarea>
 
             <label for="severitySelect">Nivel de Severidad / Evolución:</label>
             <select id="severitySelect">
                 <option value="leve">Leve / Reciente (< 2 semanas)</option>
                 <option value="moderado" selected>Moderado / Subagudo (2 - 6 semanas)</option>
                 <option value="severo">Severo / Crónico (> 6 semanas)</option>
+            </select>
+
+            <label>Seleccione el Paquete de Tratamiento:</label>
+            <div class="package-selector">
+                <div class="package-card selected-basic" id="cardBasic" onclick="selectPackage('basico')">
+                    <input type="radio" name="pkgOption" id="pkgBasic" value="basico" checked>
+                    <div class="package-title" style="color: var(--primary);">BÁSICO</div>
+                    <div class="package-desc">Manejo de síntomas, medios físicos y protocolo esencial.</div>
+                </div>
+                <div class="package-card" id="cardPremium" onclick="selectPackage('premium')">
+                    <input type="radio" name="pkgOption" id="pkgPremium" value="premium">
+                    <div class="package-title" style="color: var(--gold);">PREMIUM ⭐</div>
+                    <div class="package-desc">Incluye terapia manual, reeducación postural e higiene funcional.</div>
+                </div>
             </div>
 
             <label>Condiciones Físicas del Paciente:</label>
@@ -206,27 +235,46 @@
                 <label class="checkbox-item"><input type="checkbox" id="chkElder"> Adulto Mayor / Frágil</label>
             </div>
 
-            <button onclick="evaluarCaso()">Calcular Tratamiento y Sesiones</button>
+            <button onclick="evaluarCaso()">Calcular Plan de Sesiones</button>
         </div>
 
-        <!-- Tarjeta de Resultados -->
         <div class="card" id="result-card">
-            <div class="res-section">
-                <div class="res-title">Tratamiento Recomendado (Medios Físicos + Ejercicio)</div>
-                <div class="res-value" id="outTreatment">-</div>
+            <div id="pkgBadgeContainer"></div>
+            
+            <div style="margin-bottom: 12px;">
+                <span style="font-weight: bold; font-size: 1.1rem;" id="outTotalSessions"></span>
+                <div style="font-size: 0.8rem; color: #64748b;" id="outFrequency"></div>
             </div>
 
-            <div class="res-section">
-                <div class="res-title">Estimación de Sesiones Necesarias</div>
-                <div class="badge-sessions" id="outSessions">-</div>
-                <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;" id="outFrequency"></div>
+            <div style="font-weight: bold; color: #334155; margin-bottom: 8px; font-size: 0.9rem;">
+                DESGLOSE Y PROTOCOLO SESIÓN POR SESIÓN:
             </div>
+
+            <div id="outSessionsList"></div>
 
             <div id="outAlerts"></div>
         </div>
     </main>
 
     <script>
+        let selectedPkg = 'basico';
+
+        function selectPackage(type) {
+            selectedPkg = type;
+            const cardB = document.getElementById('cardBasic');
+            const cardP = document.getElementById('cardPremium');
+            
+            if (type === 'basico') {
+                cardB.className = 'package-card selected-basic';
+                cardP.className = 'package-card';
+                document.getElementById('pkgBasic').checked = true;
+            } else {
+                cardB.className = 'package-card';
+                cardP.className = 'package-card selected-premium';
+                document.getElementById('pkgPremium').checked = true;
+            }
+        }
+
         function evaluarCaso() {
             const text = document.getElementById('problemInput').value.toLowerCase();
             const severity = document.getElementById('severitySelect').value;
@@ -237,86 +285,87 @@
             const isElder = document.getElementById('chkElder').checked;
 
             if (!text.trim()) {
-                alert("Por favor ingrese la descripción del problema o diagnóstico.");
+                alert("Por favor ingrese la descripción del problema.");
                 return;
             }
 
-            let modalidades = [];
+            // Determinar cantidad de sesiones base según severidad
+            let numSesiones = 6;
+            if (severity === 'leve') numSesiones = 5;
+            if (severity === 'moderado') numSesiones = 8;
+            if (severity === 'severo') numSesiones = 12;
+
+            // En paquete Premium se añaden sesiones adicionales de consolidación y prevención
+            if (selectedPkg === 'premium') {
+                numSesiones += 2;
+            }
+
             let alertas = [];
-            let minSesiones = 6;
-            let maxSesiones = 10;
-            let frecuencia = "2 a 3 veces por semana";
+            if (hasPacemaker) alertas.push("⛔ CONTRAINDICACIÓN CRÍTICA: Se omite TENS/EMS por marcapasos/dispositivo activo.");
+            if (hasMetal) alertas.push("⚠️ PRECAUCIÓN METAL: Evitar calor profundo o electroterapia directa sobre el implante.");
+            if (hasDiu) alertas.push("ℹ️ NOTA DIU: Evitar electrodos en vientre bajo o zona sacra si se atiende pelvis/lumbar.");
+            if (isElder) alertas.push("👵 ADULTO MAYOR: Moderar intensidades y priorizar movilidad segura.");
 
-            // 1. Evaluación según palabras clave
-            if (text.includes("lumbar") || text.includes("espalda") || text.includes("ciatica") || text.includes("lumbago")) {
-                modalidades.push("Calor local (Compresa Húmedo-Caliente 15-20 min)");
-                if (!hasPacemaker) modalidades.push("Electroterapia analgésica (TENS modo ráfaga/bursitis)");
-                modalidades.push("Estiramientos suaves de cadena posterior y fortalecimiento de Core/lumbar");
-                minSesiones = 8; maxSesiones = 12;
+            // Definir procedimientos específicos
+            let electroterapia = hasPacemaker ? "Compresión / Movilización sin corriente (omitido TENS por marcapasos)" : "Electroterapia analgésica (TENS/EMS adaptado)";
+            let termoterapia = "Termoterapia local / Crioterapia según nivel de inflamación";
 
-            } else if (text.includes("rodilla") || text.includes("tobillo") || text.includes("esguince") || text.includes("ligamento")) {
-                modalidades.push("Crioterapia (Hielo local 10-15 min) en fase aguda o Calor si es crónico");
-                if (!hasPacemaker) modalidades.push("EMS / Electroestimulación muscular para cuadriceps/gemelos");
-                modalidades.push("Movilización articular pasiva/activa y ejercicios de propiocepción/equilibrio");
-                minSesiones = 6; maxSesiones = 10;
+            let listaSesionesHTML = "";
 
-            } else if (text.includes("cuello") || text.includes("cervical") || text.includes("trapecio")) {
-                modalidades.push("Calor superficial + Masaje terapéutico de descompresión muscular");
-                if (!hasPacemaker) modalidades.push("TENS convencional en zona supraescapular");
-                modalidades.push("Ejercicios de movilidad cervical y reeducación postural");
-                minSesiones = 5; maxSesiones = 8;
+            for (let i = 1; i <= numSesiones; i++) {
+                let fase = "";
+                let detalles = [];
 
-            } else if (text.includes("facial") || text.includes("paralisis")) {
-                modalidades.push("Compresas tibias previas para mejorar vascularización");
-                if (!hasPacemaker) modalidades.push("EMS puntual de estímulo muscular facial motor");
-                modalidades.push("Reeducación neuromuscular frente a espejo (mímica facial)");
-                minSesiones = 10; maxSesiones = 15;
+                if (i <= Math.ceil(numSesiones * 0.3)) {
+                    fase = "Fase Aguda / Manejo del Dolor";
+                    detalles.push(`• ${termoterapia}`);
+                    detalles.push(`• ${electroterapia}`);
+                    detalles.push(`• Movilización pasiva y estiramientos suaves`);
+                    if (selectedPkg === 'premium') {
+                        detalles.push(`• <strong>Terapia Manual Liberación Miofascial:</strong> Masaje descontracturante y descompresión tisular.`);
+                    }
+                } else if (i <= Math.ceil(numSesiones * 0.7)) {
+                    fase = "Fase Intermedia / Fortalecimiento y Movilidad";
+                    detalles.push(`• Ejercicios de movilidad activa controlada`);
+                    detalles.push(`• Reeducación muscular e iniciación de cargas graduadas`);
+                    if (!hasPacemaker) detalles.push(`• TENS/EMS de potenciación o recuperación muscular`);
+                    if (selectedPkg === 'premium') {
+                        detalles.push(`• <strong>Terapia Manual Articular:</strong> Movilización específica para rango de movimiento.`);
+                        detalles.push(`• <strong>Higiene Postural:</strong> Corrección de patrones de movimiento y ergonomía.`);
+                    }
+                } else {
+                    fase = "Fase Avanzada / Reacondicionamiento Funcional";
+                    detalles.push(`• Ejercicios funcionales e integración a actividades cotidianas`);
+                    detalles.push(`• Fortalecimiento estabilizador de la zona afectada`);
+                    if (selectedPkg === 'premium') {
+                        detalles.push(`• <strong>Programa de Mantenimiento Autónomo:</strong> Prescripción de rutina guiada para el hogar.`);
+                        detalles.push(`• <strong>Evaluación Funcional Final:</strong> Mapeo de control de dolor y alta asistida.`);
+                    }
+                }
 
-            } else {
-                // Tratamiento General Estándar
-                modalidades.push("Termoterapia / Crioterapia según nivel de inflamación local");
-                if (!hasPacemaker) modalidades.push("Electroterapia analgésica (TENS) como medio físico");
-                modalidades.push("Movilización asistida y cinesiterapia adaptada");
-                minSesiones = 6; maxSesiones = 10;
+                const isPremItem = selectedPkg === 'premium' ? 'premium-session' : '';
+                const isPremTitle = selectedPkg === 'premium' ? 'premium-title' : '';
+
+                listaSesionesHTML += `
+                    <div class="session-item ${isPremItem}">
+                        <div class="session-number ${isPremTitle}">Sesión ${i} - <span style="font-weight: normal; color: #475569;">${fase}</span></div>
+                        <div style="margin-top: 4px; line-height: 1.4;">${detalles.join('<br>')}</div>
+                    </div>
+                `;
             }
 
-            // 2. Ajuste según severidad
-            if (severity === "leve") {
-                minSesiones = Math.max(4, minSesiones - 2);
-                maxSesiones = Math.max(6, maxSesiones - 2);
-            } else if (severity === "severo") {
-                minSesiones += 4;
-                maxSesiones += 6;
-                frecuencia = "3 a 4 veces por semana (fase inicial)";
-            }
+            // Renderizar encabezado de paquete
+            const badgeHTML = selectedPkg === 'premium' 
+                ? `<span class="pkg-badge premium">PAQUETE PREMIUM ⭐</span>`
+                : `<span class="pkg-badge basic">PAQUETE BÁSICO</span>`;
 
-            // 3. Verificación de Seguridad y Contraindicaciones
-            if (hasPacemaker) {
-                alertas.push("⛔ <strong>CONTRAINDICACIÓN CRÍTICA:</strong> Paciente con marcapasos/implante activo. <strong>Se omite TENS/EMS</strong> para evitar interacciones.");
-            }
-            if (hasMetal) {
-                alertas.push("⚠️ <strong>Precaución Metal:</strong> Evitar calor profundo (microondas/onda corta) o electroterapia directa sobre la zona del implante.");
-            }
-            if (hasDiu) {
-                alertas.push("ℹ️ <strong>Nota DIU:</strong> Si se atiende zona lumbar o pélvica, evitar la colocación de electrodos directamente en la zona abdominal baja/sacra.");
-            }
-            if (isElder) {
-                alertas.push("👵 <strong>Adulto Mayor:</strong> Utilizar intensidades moderadas en medios físicos y enfocar el ejercicio en prevención de caídas y movilidad articular.");
-            }
-
-            // Renderizar Resultados
-            document.getElementById('outTreatment').innerHTML = "<ul style='padding-left: 18px; margin: 6px 0;'>" + 
-                modalidades.map(m => `<li>${m}</li>`).join('') + "</ul>";
-
-            document.getElementById('outSessions').innerText = `${minSesiones} a ${maxSesiones} Sesiones`;
-            document.getElementById('outFrequency').innerText = `Frecuencia estimada: ${frecuencia}`;
+            document.getElementById('pkgBadgeContainer').innerHTML = badgeHTML;
+            document.getElementById('outTotalSessions').innerText = `Total Recomendado: ${numSesiones} Sesiones`;
+            document.getElementById('outFrequency').innerText = `Frecuencia: 2 a 3 veces por semana`;
+            document.getElementById('outSessionsList').innerHTML = listaSesionesHTML;
 
             const alertDiv = document.getElementById('outAlerts');
-            if (alertas.length > 0) {
-                alertDiv.innerHTML = `<div class="alert-box"><strong>Alertas de Seguridad:</strong><ul>${alertas.map(a => `<li>${a}</li>`).join('')}</ul></div>`;
-            } else {
-                alertDiv.innerHTML = "";
-            }
+            alertDiv.innerHTML = alertas.length > 0 ? `<div class="alert-box"><ul>${alertas.map(a => `<li>${a}</li>`).join('')}</ul></div>` : "";
 
             document.getElementById('result-card').style.display = 'block';
             document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
