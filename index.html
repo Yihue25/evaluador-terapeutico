@@ -208,7 +208,7 @@
     <main>
         <div class="card">
             <label for="problemInput">Descripción de la Dolencia / Diagnóstico:</label>
-            <textarea id="problemInput" rows="3" placeholder="Ej: Dolor lumbar agudo, esguince de tobillo, parálisis facial, parastecia..."></textarea>
+            <textarea id="problemInput" rows="3" placeholder="Ej: Fractura de radio, dolor lumbar, esguince de tobillo, parálisis facial..."></textarea>
 
             <label for="severitySelect">Nivel de Severidad / Evolución:</label>
             <select id="severitySelect">
@@ -222,12 +222,12 @@
                 <div class="package-card selected-basic" id="cardBasic" onclick="selectPackage('basico')">
                     <input type="radio" name="pkgOption" id="pkgBasic" value="basico" checked>
                     <div class="package-title" style="color: var(--primary);">BÁSICO</div>
-                    <div class="package-desc">Manejo de síntomas, medios físicos y protocolo esencial.</div>
+                    <div class="package-desc">Exclusivo medios físicos (compresas) y pauta de ejercicios básicos.</div>
                 </div>
                 <div class="package-card" id="cardPremium" onclick="selectPackage('premium')">
                     <input type="radio" name="pkgOption" id="pkgPremium" value="premium">
                     <div class="package-title" style="color: var(--gold);">PREMIUM ⭐</div>
-                    <div class="package-desc">Incluye terapia manual, reeducación postural e higiene funcional.</div>
+                    <div class="package-desc">Incluye Compresas + Electroterapia (TENS/EMS) + Terapia Manual / Drenaje.</div>
                 </div>
             </div>
 
@@ -293,34 +293,38 @@
                 return;
             }
 
-            // Identificación de la zona
+            // Detección de tipo de lesión y zona
+            const esFractura = text.includes("fractura") || text.includes("fisura") || text.includes("roto") || text.includes("hueso");
+
             let zona = "Zona de Tratamiento";
-            if (text.includes("lumbar") || text.includes("espalda") || text.includes("ciatica")) zona = "Zona Lumbar y Espalda Baja";
+            if (text.includes("radio") || text.includes("antebrazo") || text.includes("muñeca")) zona = "Antebrazo y Muñeca (Radio)";
+            else if (text.includes("lumbar") || text.includes("espalda") || text.includes("ciatica")) zona = "Zona Lumbar y Espalda Baja";
             else if (text.includes("rodilla")) zona = "Articulación de la Rodilla";
-            else if (text.includes("tobillo") || text.includes("pie") || text.includes("esguince")) zona = "Tobillo y Pie";
+            else if (text.includes("tobillo") || text.includes("pie")) zona = "Tobillo y Pie";
             else if (text.includes("cuello") || text.includes("cervical") || text.includes("hombro")) zona = "Zona Cervical y Hombros";
             else if (text.includes("facial") || text.includes("cara")) zona = "Musculatura Facial";
 
-            // Parámetros de Electroterapia según lesión y zona
+            // Parámetros de Electroterapia (Solo para PREMIUM)
             let freqTensAgudo = "80 - 120 Hz (TENS Convencional / Compuerta del dolor)";
             let freqTensCronico = "2 - 10 Hz (TENS Acupuntura / Liberación de Endorfinas)";
             let freqEms = "35 - 50 Hz (Fortalecimiento y Reeducación Muscular)";
 
-            if (text.includes("facial") || text.includes("paralisis")) {
+            if (esFractura) {
+                freqTensAgudo = "100 - 120 Hz (TENS analgésico periférico, lejos del foco de fractura)";
+                freqEms = "20 - 30 Hz (Estimulación trófica suave para circulación, sin contracción brusca)";
+            } else if (text.includes("facial") || text.includes("paralisis")) {
                 freqTensAgudo = "20 - 45 Hz (Estimulación suave sensitivo-motora)";
                 freqEms = "10 - 25 Hz (Reeducación neuromuscular suave en rostro)";
-            } else if (text.includes("esguince") || text.includes("inflama")) {
-                freqTensAgudo = "100 - 150 Hz (Bloqueo rápido del dolor e inhibición de edema)";
             }
 
-            // Temperatura de Compresas según fase/severidad
+            // Temperatura de Compresas (Aplica para BÁSICO y PREMIUM)
             let tempCompresa = "";
             if (severity === 'leve') {
-                tempCompresa = "Crioterapia (Compresa Fría / Gelpack a 0°C - 4°C) para contención de edema e inflamación.";
+                tempCompresa = "Crioterapia (Compresa Fría / Gelpack a 0°C - 4°C) para contención de inflamación.";
             } else if (severity === 'moderado') {
-                tempCompresa = "Termoterapia (Compresa Húmedo-Caliente entre 40°C y 45°C) protegida con toalla.";
+                tempCompresa = "Termoterapia (Compresa Húmedo-Caliente a 40°C - 45°C) protegida con toalla.";
             } else {
-                tempCompresa = "Termoterapia Profunda (Compresa Caliente entre 42°C y 48°C) para relajar contracturas crónicas.";
+                tempCompresa = "Termoterapia Profunda (Compresa Caliente a 42°C - 48°C) para relajación muscular.";
             }
 
             let numSesiones = 6;
@@ -330,69 +334,97 @@
 
             if (selectedPkg === 'premium') numSesiones += 2;
 
+            // Alertas del paciente
             let alertas = [];
-            if (hasPacemaker) alertas.push("⛔ CONTRAINDICACIÓN CRÍTICA: Se omite TENS/EMS por marcapasos/dispositivo activo.");
-            if (hasMetal) alertas.push("⚠️ PRECAUCIÓN METAL: Evitar calor profundo o electroterapia directa sobre el implante.");
-            if (hasDiu) alertas.push("ℹ️ NOTA DIU: Evitar electrodos en vientre bajo o zona sacra si se atiende pelvis/lumbar.");
-            if (isElder) alertas.push("👵 ADULTO MAYOR: Moderar intensidades y controlar temperatura de compresas.");
+            if (esFractura) alertas.push("🦴 PRECAUCIÓN FRACTURA: No aplicar cargas, presiones directas ni masaje sobre el trazo de la fractura hasta confirmación de callo óseo.");
+            if (selectedPkg === 'premium' && hasPacemaker) alertas.push("⛔ CONTRAINDICACIÓN CRÍTICA: Se omite la electroterapia (TENS/EMS) por marcapasos/dispositivo activo.");
+            if (hasMetal) alertas.push("⚠️ PRECAUCIÓN METAL: Evitar calor profundo o electroterapia directa sobre implantes o material de osteosíntesis.");
+            if (hasDiu) alertas.push("ℹ️ NOTA DIU: Evitar electrodos o calor directo en vientre bajo o zona sacra.");
+            if (isElder) alertas.push("👵 ADULTO MAYOR: Moderar temperatura de compresas e intensidad de ejercicios.");
 
             let listaSesionesHTML = "";
 
             for (let i = 1; i <= numSesiones; i++) {
                 let fase = "";
                 let ubicacion = "";
-                let electroInfo = "";
-                let termoterapiaInfo = "";
+                let fisicosYElectroInfo = "";
                 let acciones = [];
 
                 if (i <= Math.ceil(numSesiones * 0.3)) {
-                    fase = "Fase Aguda / Manejo del Dolor";
-                    ubicacion = hasPacemaker 
-                        ? `Aplica compresa sobre ${zona}.` 
-                        : `Electrodos rodeando el punto de máximo dolor en ${zona}. Compresa sobre la zona afectada.`;
+                    fase = "Fase Aguda / Manejo de Dolor e Inflamación";
+                    ubicacion = esFractura
+                        ? `Compresa en zonas adyacentes a ${zona} (mano/dedos o brazo), respetando la inmovilización ósea.`
+                        : `Compresa aplicada sobre la zona afectada en ${zona}.`;
                     
-                    termoterapiaInfo = `• <strong>Medio Físico:</strong> ${tempCompresa} Tiempo: 15 a 20 min.`;
-                    electroInfo = hasPacemaker 
-                        ? "• <strong>Electroterapia:</strong> Omitida por presencia de marcapasos."
-                        : `• <strong>Electroterapia:</strong> TENS a Frecuencia de <strong>${freqTensAgudo}</strong> por 20 minutos.`;
+                    // Medios Físicos vs Electroterapia segun paquete
+                    if (selectedPkg === 'basico') {
+                        fisicosYElectroInfo = `• <strong>Medio Físico (Básico):</strong> ${tempCompresa} Tiempo: 15 a 20 min.`;
+                    } else {
+                        let electroText = hasPacemaker ? "Omitida por marcapasos." : `TENS a Frecuencia de <strong>${freqTensAgudo}</strong> por 20 min.`;
+                        fisicosYElectroInfo = `• <strong>Medio Físico:</strong> ${tempCompresa} Tiempo: 15 min.<br>• <strong>[PREMIUM] Electroterapia:</strong> ${electroText}`;
+                    }
 
-                    acciones.push("• Movilizaciones pasivas y estiramientos suaves sin provocar dolor.");
-                    if (selectedPkg === 'premium') {
-                        acciones.push("• <strong>[PREMIUM] Terapia Manual:</strong> Masaje miofascial descontracturante durante 15 min en la musculatura adyacente.");
+                    // Ejercicios y Acciones
+                    if (esFractura) {
+                        acciones.push("• Movilizaciones activas simples de articulaciones libres (dedos de la mano y hombro) para prevenir rigidez.");
+                        acciones.push("• Elevación del miembro afectado para favorecer el retorno venoso.");
+                        if (selectedPkg === 'premium') {
+                            acciones.push("• <strong>[PREMIUM] Drenaje Linfático Manual:</strong> En mano y codo para reabsorber el edema.");
+                        }
+                    } else {
+                        acciones.push("• Movilizaciones pasivas y estiramientos suaves sin provocar dolor.");
+                        if (selectedPkg === 'premium') {
+                            acciones.push("• <strong>[PREMIUM] Terapia Manual:</strong> Masaje miofascial descontracturante durante 15 min en músculos circundantes.");
+                        }
                     }
 
                 } else if (i <= Math.ceil(numSesiones * 0.7)) {
-                    fase = "Fase Intermedia / Fortalecimiento y Movilidad";
-                    ubicacion = hasPacemaker 
-                        ? `Banda elástica o soporte en ${zona}.` 
-                        : `Electrodos ubicados en el motor point / vientre muscular de ${zona}.`;
+                    fase = "Fase Intermedia / Recuperación Movilidad";
+                    ubicacion = `Zona de tratamiento en ${zona}.`;
                     
-                    termoterapiaInfo = "• <strong>Medio Físico:</strong> Compresa Caliente (40°C - 42°C) previo a la movilidad para elastificar el tejido.";
-                    electroInfo = hasPacemaker 
-                        ? "• <strong>Electroterapia:</strong> Omitida por presencia de marcapasos."
-                        : `• <strong>Electroterapia:</strong> TENS Crónico (<strong>${freqTensCronico}</strong>) o EMS/NMES a Frecuencia de <strong>${freqEms}</strong> para activación motora.`;
+                    if (selectedPkg === 'basico') {
+                        fisicosYElectroInfo = `• <strong>Medio Físico (Básico):</strong> Compresa Húmedo-Caliente (40°C - 42°C) por 15 min previo a los ejercicios.`;
+                    } else {
+                        let electroText = hasPacemaker ? "Omitida por marcapasos." : `TENS Crónico (<strong>${freqTensCronico}</strong>) o EMS suave (<strong>${freqEms}</strong>) por 20 min.`;
+                        fisicosYElectroInfo = `• <strong>Medio Físico:</strong> Compresa Húmedo-Caliente (40°C - 42°C) por 15 min.<br>• <strong>[PREMIUM] Electroterapia:</strong> ${electroText}`;
+                    }
 
-                    acciones.push("• Iniciar ejercicios de movilidad activa asistida (3 series de 10 reps).");
-                    acciones.push("• Fortalecimiento muscular isométrico y movilidad gradual.");
-                    if (selectedPkg === 'premium') {
-                        acciones.push("• <strong>[PREMIUM] Terapia Articular:</strong> Deslizamientos articulares de grado II-III para ganar rango.");
-                        acciones.push("• <strong>[PREMIUM] Reeducación Postural:</strong> Corrección técnica de patrones de movimiento.");
+                    if (esFractura) {
+                        acciones.push("• Flexión, extensión y pronosupinación activa guiada de muñeca (según consolidación ósea).");
+                        acciones.push("• Ejercicios isométricos básicos de agarre con esponja suave.");
+                        if (selectedPkg === 'premium') {
+                            acciones.push("• <strong>[PREMIUM] Terapia Articular Específica:</strong> Movilización pasiva asistida para ganar rango en pronosupinación.");
+                            acciones.push("• <strong>[PREMIUM] Reeducación Funcional:</strong> Corrección técnica de postura y uso funcional del brazo.");
+                        }
+                    } else {
+                        acciones.push("• Ejercicios de movilidad activa y fortalecimiento isométrico suave (3 series de 10 reps).");
+                        if (selectedPkg === 'premium') {
+                            acciones.push("• <strong>[PREMIUM] Terapia Manual Avanzada:</strong> Liberación articular y estiramiento miofascial profundo.");
+                        }
                     }
 
                 } else {
-                    fase = "Fase Avanzada / Reacondicionamiento Funcional";
-                    ubicacion = `Bandas elásticas, cargas progresivas o apoyos en ${zona}.`;
+                    fase = "Fase Avanzada / Reacondicionamiento";
+                    ubicacion = `Zona de tratamiento en ${zona} con elementos de resistencia suave.`;
                     
-                    termoterapiaInfo = "• <strong>Medio Físico:</strong> Crioterapia / Compresa Fría (0°C - 5°C) al finalizar la sesión (10 min) para prevenir inflamación post-ejercicio.";
-                    electroInfo = hasPacemaker 
-                        ? "• <strong>Electroterapia:</strong> Omitida."
-                        : `• <strong>Electroterapia:</strong> EMS a <strong>${freqEms}</strong> como potenciación coordinada con el ejercicio.`;
+                    if (selectedPkg === 'basico') {
+                        fisicosYElectroInfo = `• <strong>Medio Físico (Básico):</strong> Compresa Fría / Crioterapia (10 min) al finalizar los ejercicios.`;
+                    } else {
+                        let electroText = hasPacemaker ? "Omitida por marcapasos." : `EMS a Frecuencia de <strong>${freqEms}</strong> para potenciación motora (15 min).`;
+                        fisicosYElectroInfo = `• <strong>Medio Físico:</strong> Compresa Fría (10 min) al finalizar.<br>• <strong>[PREMIUM] Electroterapia:</strong> ${electroText}`;
+                    }
 
-                    acciones.push("• Ejercicios funcionales adaptados a la actividad cotidiana del paciente.");
-                    acciones.push("• Trabajo de estabilidad, propiocepción y fuerza.");
-                    if (selectedPkg === 'premium') {
-                        acciones.push("• <strong>[PREMIUM] Plan Autónomo Guiado:</strong> Instrucción de rutina de ejercicios en casa.");
-                        acciones.push("• <strong>[PREMIUM] Valoración Final:</strong> Prueba funcional de alta asistida.");
+                    if (esFractura) {
+                        acciones.push("• Ejercicios de fortalecimiento progresivo de prensión de mano y resistencia de muñeca.");
+                        if (selectedPkg === 'premium') {
+                            acciones.push("• <strong>[PREMIUM] Plan Autónomo Guiado:</strong> Rutina personalizada con imágenes/pautas de fuerza para casa.");
+                            acciones.push("• <strong>[PREMIUM] Valoración Funcional:</strong> Test de fuerza de prensión y medición goniométrica final.");
+                        }
+                    } else {
+                        acciones.push("• Ejercicios funcionales y de estabilidad adaptados a la rutina diaria.");
+                        if (selectedPkg === 'premium') {
+                            acciones.push("• <strong>[PREMIUM] Plan de Mantenimiento:</strong> Esquema preventivo contra recaídas para el paciente.");
+                        }
                     }
                 }
 
@@ -409,10 +441,9 @@
                         </div>
 
                         <div class="section-block">
-                            <div class="section-title">⚡ Parámetros Térmicos y Eléctricos:</div>
+                            <div class="section-title">⚡ Agentes Físicos y Aparatología:</div>
                             <div style="color: #334155;">
-                                ${termoterapiaInfo}<br>
-                                ${electroInfo}
+                                ${fisicosYElectroInfo}
                             </div>
                         </div>
 
@@ -425,8 +456,8 @@
             }
 
             const badgeHTML = selectedPkg === 'premium' 
-                ? `<span class="pkg-badge premium">PAQUETE PREMIUM ⭐</span>`
-                : `<span class="pkg-badge basic">PAQUETE BÁSICO</span>`;
+                ? `<span class="pkg-badge premium">PAQUETE PREMIUM ⭐ (Compresas + TENS/EMS + Terapia Manual)</span>`
+                : `<span class="pkg-badge basic">PAQUETE BÁSICO (Compresas + Ejercicios Básicos)</span>`;
 
             document.getElementById('pkgBadgeContainer').innerHTML = badgeHTML;
             document.getElementById('outTotalSessions').innerText = `Total Recomendado: ${numSesiones} Sesiones`;
