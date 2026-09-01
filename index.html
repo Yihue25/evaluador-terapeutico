@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asistente de Protocolos y Sesiones</title>
+    <!-- Configuración para PWA e instalación en iPhone / Android -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f766e">
+    
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-dark: #0d9488;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --border: #cbd5e1;
+            --accent: #fef2f2;
+            --accent-border: #fca5a5;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        header p {
+            margin: 4px 0 0 0;
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        main {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background-color: #fff;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        textarea:focus, select:focus {
+            border-color: var(--primary);
+            ring: 2px var(--primary);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .checkbox-item {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:active {
+            background-color: var(--primary-dark);
+        }
+
+        /* Resultados */
+        #result-card {
+            display: none;
+            border-left: 5px solid var(--primary);
+        }
+
+        .res-section {
+            margin-bottom: 12px;
+        }
+
+        .res-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        .res-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 2px;
+        }
+
+        .badge-sessions {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 4px;
+        }
+
+        .alert-box {
+            background-color: var(--accent);
+            border: 1px solid var(--accent-border);
+            color: #991b1b;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .alert-box ul {
+            margin: 4px 0 0 0;
+            padding-left: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Evaluador Terapéutico</h1>
+        <p>Acompañamiento Domiciliario Asistido</p>
+    </header>
+
+    <main>
+        <div class="card">
+            <label for="problemInput">Descripción de la Dolencia / Diagnóstico:</label>
+            <textarea id="problemInput" rows="3" placeholder="Ej: Dolor lumbar agudo, parálisis facial, esguince de tobillo, rodilla post-operatoria..."></textarea>
+
+            <label for="severitySelect">Nivel de Severidad / Evolución:</label>
+            <select id="severitySelect">
+                <option value="leve">Leve / Reciente (< 2 semanas)</option>
+                <option value="moderado" selected>Moderado / Subagudo (2 - 6 semanas)</option>
+                <option value="severo">Severo / Crónico (> 6 semanas)</option>
+            </div>
+
+            <label>Condiciones Físicas del Paciente:</label>
+            <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" id="chkPacemaker"> Marcapasos/Eléctrico</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkMetal"> Implante Metal</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkDiu"> DIU / Anticonceptivo</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkElder"> Adulto Mayor / Frágil</label>
+            </div>
+
+            <button onclick="evaluarCaso()">Calcular Tratamiento y Sesiones</button>
+        </div>
+
+        <!-- Tarjeta de Resultados -->
+        <div class="card" id="result-card">
+            <div class="res-section">
+                <div class="res-title">Tratamiento Recomendado (Medios Físicos + Ejercicio)</div>
+                <div class="res-value" id="outTreatment">-</div>
+            </div>
+
+            <div class="res-section">
+                <div class="res-title">Estimación de Sesiones Necesarias</div>
+                <div class="badge-sessions" id="outSessions">-</div>
+                <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;" id="outFrequency"></div>
+            </div>
+
+            <div id="outAlerts"></div>
+        </div>
+    </main>
+
+    <script>
+        function evaluarCaso() {
+            const text = document.getElementById('problemInput').value.toLowerCase();
+            const severity = document.getElementById('severitySelect').value;
+            
+            const hasPacemaker = document.getElementById('chkPacemaker').checked;
+            const hasMetal = document.getElementById('chkMetal').checked;
+            const hasDiu = document.getElementById('chkDiu').checked;
+            const isElder = document.getElementById('chkElder').checked;
+
+            if (!text.trim()) {
+                alert("Por favor ingrese la descripción del problema o diagnóstico.");
+                return;
+            }
+
+            let modalidades = [];
+            let alertas = [];
+            let minSesiones = 6;
+            let maxSesiones = 10;
+            let frecuencia = "2 a 3 veces por semana";
+
+            // 1. Evaluación según palabras clave
+            if (text.includes("lumbar") || text.includes("espalda") || text.includes("ciatica") || text.includes("lumbago")) {
+                modalidades.push("Calor local (Compresa Húmedo-Caliente 15-20 min)");
+                if (!hasPacemaker) modalidades.push("Electroterapia analgésica (TENS modo ráfaga/bursitis)");
+                modalidades.push("Estiramientos suaves de cadena posterior y fortalecimiento de Core/lumbar");
+                minSesiones = 8; maxSesiones = 12;
+
+            } else if (text.includes("rodilla") || text.includes("tobillo") || text.includes("esguince") || text.includes("ligamento")) {
+                modalidades.push("Crioterapia (Hielo local 10-15 min) en fase aguda o Calor si es crónico");
+                if (!hasPacemaker) modalidades.push("EMS / Electroestimulación muscular para cuadriceps/gemelos");
+                modalidades.push("Movilización articular pasiva/activa y ejercicios de propiocepción/equilibrio");
+                minSesiones = 6; maxSesiones = 10;
+
+            } else if (text.includes("cuello") || text.includes("cervical") || text.includes("trapecio")) {
+                modalidades.push("Calor superficial + Masaje terapéutico de descompresión muscular");
+                if (!hasPacemaker) modalidades.push("TENS convencional en zona supraescapular");
+                modalidades.push("Ejercicios de movilidad cervical y reeducación postural");
+                minSesiones = 5; maxSesiones = 8;
+
+            } else if (text.includes("facial") || text.includes("paralisis")) {
+                modalidades.push("Compresas tibias previas para mejorar vascularización");
+                if (!hasPacemaker) modalidades.push("EMS puntual de estímulo muscular facial motor");
+                modalidades.push("Reeducación neuromuscular frente a espejo (mímica facial)");
+                minSesiones = 10; maxSesiones = 15;
+
+            } else {
+                // Tratamiento General Estándar
+                modalidades.push("Termoterapia / Crioterapia según nivel de inflamación local");
+                if (!hasPacemaker) modalidades.push("Electroterapia analgésica (TENS) como medio físico");
+                modalidades.push("Movilización asistida y cinesiterapia adaptada");
+                minSesiones = 6; maxSesiones = 10;
+            }
+
+            // 2. Ajuste según severidad
+            if (severity === "leve") {
+                minSesiones = Math.max(4, minSesiones - 2);
+                maxSesiones = Math.max(6, maxSesiones - 2);
+            } else if (severity === "severo") {
+                minSesiones += 4;
+                maxSesiones += 6;
+                frecuencia = "3 a 4 veces por semana (fase inicial)";
+            }
+
+            // 3. Verificación de Seguridad y Contraindicaciones
+            if (hasPacemaker) {
+                alertas.push("⛔ <strong>CONTRAINDICACIÓN CRÍTICA:</strong> Paciente con marcapasos/implante activo. <strong>Se omite TENS/EMS</strong> para evitar interacciones.");
+            }
+            if (hasMetal) {
+                alertas.push("⚠️ <strong>Precaución Metal:</strong> Evitar calor profundo (microondas/onda corta) o electroterapia directa sobre la zona del implante.");
+            }
+            if (hasDiu) {
+                alertas.push("ℹ️ <strong>Nota DIU:</strong> Si se atiende zona lumbar o pélvica, evitar la colocación de electrodos directamente en la zona abdominal baja/sacra.");
+            }
+            if (isElder) {
+                alertas.push("👵 <strong>Adulto Mayor:</strong> Utilizar intensidades moderadas en medios físicos y enfocar el ejercicio en prevención de caídas y movilidad articular.");
+            }
+
+            // Renderizar Resultados
+            document.getElementById('outTreatment').innerHTML = "<ul style='padding-left: 18px; margin: 6px 0;'>" + 
+                modalidades.map(m => `<li>${m}</li>`).join('') + "</ul>";
+
+            document.getElementById('outSessions').innerText = `${minSesiones} a ${maxSesiones} Sesiones`;
+            document.getElementById('outFrequency').innerText = `Frecuencia estimada: ${frecuencia}`;
+
+            const alertDiv = document.getElementById('outAlerts');
+            if (alertas.length > 0) {
+                alertDiv.innerHTML = `<div class="alert-box"><strong>Alertas de Seguridad:</strong><ul>${alertas.map(a => `<li>${a}</li>`).join('')}</ul></div>`;
+            } else {
+                alertDiv.innerHTML = "";
+            }
+
+            document.getElementById('result-card').style.display = 'block';
+            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
