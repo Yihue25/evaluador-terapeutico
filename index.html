@@ -208,7 +208,7 @@
     <main>
         <div class="card">
             <label for="problemInput">Descripción de la Dolencia / Diagnóstico:</label>
-            <textarea id="problemInput" rows="3" placeholder="Ej: Dolor lumbar agudo, esguince de tobillo, parálisis facial..."></textarea>
+            <textarea id="problemInput" rows="3" placeholder="Ej: Dolor lumbar agudo, esguince de tobillo, parálisis facial, parastecia..."></textarea>
 
             <label for="severitySelect">Nivel de Severidad / Evolución:</label>
             <select id="severitySelect">
@@ -293,11 +293,35 @@
                 return;
             }
 
+            // Identificación de la zona
             let zona = "Zona de Tratamiento";
             if (text.includes("lumbar") || text.includes("espalda") || text.includes("ciatica")) zona = "Zona Lumbar y Espalda Baja";
             else if (text.includes("rodilla")) zona = "Articulación de la Rodilla";
-            else if (text.includes("tobillo") || text.includes("pie")) zona = "Tobillo y Pie";
-            else if (text.includes("cuello") || text.includes("cervical")) zona = "Zona Cervical y Hombros";
+            else if (text.includes("tobillo") || text.includes("pie") || text.includes("esguince")) zona = "Tobillo y Pie";
+            else if (text.includes("cuello") || text.includes("cervical") || text.includes("hombro")) zona = "Zona Cervical y Hombros";
+            else if (text.includes("facial") || text.includes("cara")) zona = "Musculatura Facial";
+
+            // Parámetros de Electroterapia según lesión y zona
+            let freqTensAgudo = "80 - 120 Hz (TENS Convencional / Compuerta del dolor)";
+            let freqTensCronico = "2 - 10 Hz (TENS Acupuntura / Liberación de Endorfinas)";
+            let freqEms = "35 - 50 Hz (Fortalecimiento y Reeducación Muscular)";
+
+            if (text.includes("facial") || text.includes("paralisis")) {
+                freqTensAgudo = "20 - 45 Hz (Estimulación suave sensitivo-motora)";
+                freqEms = "10 - 25 Hz (Reeducación neuromuscular suave en rostro)";
+            } else if (text.includes("esguince") || text.includes("inflama")) {
+                freqTensAgudo = "100 - 150 Hz (Bloqueo rápido del dolor e inhibición de edema)";
+            }
+
+            // Temperatura de Compresas según fase/severidad
+            let tempCompresa = "";
+            if (severity === 'leve') {
+                tempCompresa = "Crioterapia (Compresa Fría / Gelpack a 0°C - 4°C) para contención de edema e inflamación.";
+            } else if (severity === 'moderado') {
+                tempCompresa = "Termoterapia (Compresa Húmedo-Caliente entre 40°C y 45°C) protegida con toalla.";
+            } else {
+                tempCompresa = "Termoterapia Profunda (Compresa Caliente entre 42°C y 48°C) para relajar contracturas crónicas.";
+            }
 
             let numSesiones = 6;
             if (severity === 'leve') numSesiones = 5;
@@ -310,51 +334,65 @@
             if (hasPacemaker) alertas.push("⛔ CONTRAINDICACIÓN CRÍTICA: Se omite TENS/EMS por marcapasos/dispositivo activo.");
             if (hasMetal) alertas.push("⚠️ PRECAUCIÓN METAL: Evitar calor profundo o electroterapia directa sobre el implante.");
             if (hasDiu) alertas.push("ℹ️ NOTA DIU: Evitar electrodos en vientre bajo o zona sacra si se atiende pelvis/lumbar.");
-            if (isElder) alertas.push("👵 ADULTO MAYOR: Moderar intensidades y priorizar movilidad segura.");
+            if (isElder) alertas.push("👵 ADULTO MAYOR: Moderar intensidades y controlar temperatura de compresas.");
 
             let listaSesionesHTML = "";
 
             for (let i = 1; i <= numSesiones; i++) {
                 let fase = "";
                 let ubicacion = "";
+                let electroInfo = "";
+                let termoterapiaInfo = "";
                 let acciones = [];
 
                 if (i <= Math.ceil(numSesiones * 0.3)) {
                     fase = "Fase Aguda / Manejo del Dolor";
                     ubicacion = hasPacemaker 
-                        ? `Aplica compresa térmica/fría sobre ${zona}.` 
-                        : `Electrodos rodeando el punto de máximo dolor en ${zona}. Compresa sobre el tejido circundante.`;
+                        ? `Aplica compresa sobre ${zona}.` 
+                        : `Electrodos rodeando el punto de máximo dolor en ${zona}. Compresa sobre la zona afectada.`;
                     
-                    acciones.push("• Colocar medio físico (frío/calor según inflamación) durante 15 a 20 minutos.");
-                    if (!hasPacemaker) acciones.push("• Aplicar TENS en modo convencional (100 Hz) a intensidad confortable por 20 min.");
-                    acciones.push("• Realizar movilizaciones pasivas y estiramientos suaves sin provocar dolor.");
+                    termoterapiaInfo = `• <strong>Medio Físico:</strong> ${tempCompresa} Tiempo: 15 a 20 min.`;
+                    electroInfo = hasPacemaker 
+                        ? "• <strong>Electroterapia:</strong> Omitida por presencia de marcapasos."
+                        : `• <strong>Electroterapia:</strong> TENS a Frecuencia de <strong>${freqTensAgudo}</strong> por 20 minutos.`;
+
+                    acciones.push("• Movilizaciones pasivas y estiramientos suaves sin provocar dolor.");
                     if (selectedPkg === 'premium') {
-                        acciones.push("• <strong>[PREMIUM] Terapia Manual:</strong> Aplicar masaje miofascial descontracturante durante 15 min en la musculatura adyacente.");
+                        acciones.push("• <strong>[PREMIUM] Terapia Manual:</strong> Masaje miofascial descontracturante durante 15 min en la musculatura adyacente.");
                     }
 
                 } else if (i <= Math.ceil(numSesiones * 0.7)) {
                     fase = "Fase Intermedia / Fortalecimiento y Movilidad";
                     ubicacion = hasPacemaker 
-                        ? `Materia de soporte o banda elástica fijada en zona estable inferior/superior a ${zona}.` 
-                        : `Electrodos sobre el vientre muscular principal de ${zona} para estimulación motora.`;
+                        ? `Banda elástica o soporte en ${zona}.` 
+                        : `Electrodos ubicados en el motor point / vientre muscular de ${zona}.`;
                     
+                    termoterapiaInfo = "• <strong>Medio Físico:</strong> Compresa Caliente (40°C - 42°C) previo a la movilidad para elastificar el tejido.";
+                    electroInfo = hasPacemaker 
+                        ? "• <strong>Electroterapia:</strong> Omitida por presencia de marcapasos."
+                        : `• <strong>Electroterapia:</strong> TENS Crónico (<strong>${freqTensCronico}</strong>) o EMS/NMES a Frecuencia de <strong>${freqEms}</strong> para activación motora.`;
+
                     acciones.push("• Iniciar ejercicios de movilidad activa asistida (3 series de 10 reps).");
-                    if (!hasPacemaker) acciones.push("• Aplicar EMS (Electroestimulación Muscle/Motor) para reactivar tono postural.");
-                    acciones.push("• Realizar ejercicios de fortalecimiento isométrico y rango de movimiento gradual.");
+                    acciones.push("• Fortalecimiento muscular isométrico y movilidad gradual.");
                     if (selectedPkg === 'premium') {
-                        acciones.push("• <strong>[PREMIUM] Terapia Articular Específica:</strong> Deslizamientos articulares de grado II-III para recuperar movilidad.");
-                        acciones.push("• <strong>[PREMIUM] Reeducación Postural:</strong> Corrección táctil y visual frente al espejo de vicios posturales.");
+                        acciones.push("• <strong>[PREMIUM] Terapia Articular:</strong> Deslizamientos articulares de grado II-III para ganar rango.");
+                        acciones.push("• <strong>[PREMIUM] Reeducación Postural:</strong> Corrección técnica de patrones de movimiento.");
                     }
 
                 } else {
                     fase = "Fase Avanzada / Reacondicionamiento Funcional";
-                    ubicacion = `Bandas elásticas, pesos ligeros o apoyos en ${zona} y articulaciones adyacentes.`;
+                    ubicacion = `Bandas elásticas, cargas progresivas o apoyos en ${zona}.`;
                     
-                    acciones.push("• Ejecutar ejercicios funcionales que simulen la rutina cotidiana o laboral del paciente.");
-                    acciones.push("• Trabajar ejercicios de equilibrio, propiocepción y estabilización del CORE/Eje corporal.");
+                    termoterapiaInfo = "• <strong>Medio Físico:</strong> Crioterapia / Compresa Fría (0°C - 5°C) al finalizar la sesión (10 min) para prevenir inflamación post-ejercicio.";
+                    electroInfo = hasPacemaker 
+                        ? "• <strong>Electroterapia:</strong> Omitida."
+                        : `• <strong>Electroterapia:</strong> EMS a <strong>${freqEms}</strong> como potenciación coordinada con el ejercicio.`;
+
+                    acciones.push("• Ejercicios funcionales adaptados a la actividad cotidiana del paciente.");
+                    acciones.push("• Trabajo de estabilidad, propiocepción y fuerza.");
                     if (selectedPkg === 'premium') {
-                        acciones.push("• <strong>[PREMIUM] Plan Autónomo Guiado:</strong> Explicar y practicar con el paciente su rutina de mantenimiento casero.");
-                        acciones.push("• <strong>[PREMIUM] Valoración de Alta:</strong> Pruebas de capacidad funcional final y entrega de recomendaciones impresas/digitales.");
+                        acciones.push("• <strong>[PREMIUM] Plan Autónomo Guiado:</strong> Instrucción de rutina de ejercicios en casa.");
+                        acciones.push("• <strong>[PREMIUM] Valoración Final:</strong> Prueba funcional de alta asistida.");
                     }
                 }
 
@@ -368,6 +406,14 @@
                         <div class="section-block">
                             <div class="section-title">📍 Ubicación de Elementos:</div>
                             <div style="color: #334155;">${ubicacion}</div>
+                        </div>
+
+                        <div class="section-block">
+                            <div class="section-title">⚡ Parámetros Térmicos y Eléctricos:</div>
+                            <div style="color: #334155;">
+                                ${termoterapiaInfo}<br>
+                                ${electroInfo}
+                            </div>
                         </div>
 
                         <div class="section-block">
