@@ -76,7 +76,6 @@
             background-color: #fff;
         }
 
-        /* Selector de Paquetes */
         .package-selector {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -94,9 +93,7 @@
             background: #f1f5f9;
         }
 
-        .package-card input[type="radio"] {
-            display: none;
-        }
+        .package-card input[type="radio"] { display: none; }
 
         .package-card.selected-basic {
             border-color: var(--primary);
@@ -108,16 +105,8 @@
             background-color: var(--gold-bg);
         }
 
-        .package-title {
-            font-weight: bold;
-            font-size: 0.95rem;
-            margin-bottom: 4px;
-        }
-
-        .package-desc {
-            font-size: 0.75rem;
-            color: #64748b;
-        }
+        .package-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; }
+        .package-desc { font-size: 0.75rem; color: #64748b; }
 
         .checkbox-group {
             display: grid;
@@ -161,9 +150,9 @@
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-left: 4px solid var(--primary);
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
             font-size: 0.88rem;
         }
 
@@ -175,11 +164,26 @@
         .session-number {
             font-weight: bold;
             color: var(--primary);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
         }
 
-        .session-number.premium-title {
-            color: var(--gold);
+        .session-number.premium-title { color: var(--gold); }
+
+        .section-block {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 1px dashed #cbd5e1;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #475569;
+            margin-bottom: 4px;
         }
 
         .alert-box {
@@ -289,16 +293,18 @@
                 return;
             }
 
-            // Determinar cantidad de sesiones base según severidad
+            let zona = "Zona de Tratamiento";
+            if (text.includes("lumbar") || text.includes("espalda") || text.includes("ciatica")) zona = "Zona Lumbar y Espalda Baja";
+            else if (text.includes("rodilla")) zona = "Articulación de la Rodilla";
+            else if (text.includes("tobillo") || text.includes("pie")) zona = "Tobillo y Pie";
+            else if (text.includes("cuello") || text.includes("cervical")) zona = "Zona Cervical y Hombros";
+
             let numSesiones = 6;
             if (severity === 'leve') numSesiones = 5;
             if (severity === 'moderado') numSesiones = 8;
             if (severity === 'severo') numSesiones = 12;
 
-            // En paquete Premium se añaden sesiones adicionales de consolidación y prevención
-            if (selectedPkg === 'premium') {
-                numSesiones += 2;
-            }
+            if (selectedPkg === 'premium') numSesiones += 2;
 
             let alertas = [];
             if (hasPacemaker) alertas.push("⛔ CONTRAINDICACIÓN CRÍTICA: Se omite TENS/EMS por marcapasos/dispositivo activo.");
@@ -306,40 +312,49 @@
             if (hasDiu) alertas.push("ℹ️ NOTA DIU: Evitar electrodos en vientre bajo o zona sacra si se atiende pelvis/lumbar.");
             if (isElder) alertas.push("👵 ADULTO MAYOR: Moderar intensidades y priorizar movilidad segura.");
 
-            // Definir procedimientos específicos
-            let electroterapia = hasPacemaker ? "Compresión / Movilización sin corriente (omitido TENS por marcapasos)" : "Electroterapia analgésica (TENS/EMS adaptado)";
-            let termoterapia = "Termoterapia local / Crioterapia según nivel de inflamación";
-
             let listaSesionesHTML = "";
 
             for (let i = 1; i <= numSesiones; i++) {
                 let fase = "";
-                let detalles = [];
+                let ubicacion = "";
+                let acciones = [];
 
                 if (i <= Math.ceil(numSesiones * 0.3)) {
                     fase = "Fase Aguda / Manejo del Dolor";
-                    detalles.push(`• ${termoterapia}`);
-                    detalles.push(`• ${electroterapia}`);
-                    detalles.push(`• Movilización pasiva y estiramientos suaves`);
+                    ubicacion = hasPacemaker 
+                        ? `Aplica compresa térmica/fría sobre ${zona}.` 
+                        : `Electrodos rodeando el punto de máximo dolor en ${zona}. Compresa sobre el tejido circundante.`;
+                    
+                    acciones.push("• Colocar medio físico (frío/calor según inflamación) durante 15 a 20 minutos.");
+                    if (!hasPacemaker) acciones.push("• Aplicar TENS en modo convencional (100 Hz) a intensidad confortable por 20 min.");
+                    acciones.push("• Realizar movilizaciones pasivas y estiramientos suaves sin provocar dolor.");
                     if (selectedPkg === 'premium') {
-                        detalles.push(`• <strong>Terapia Manual Liberación Miofascial:</strong> Masaje descontracturante y descompresión tisular.`);
+                        acciones.push("• <strong>[PREMIUM] Terapia Manual:</strong> Aplicar masaje miofascial descontracturante durante 15 min en la musculatura adyacente.");
                     }
+
                 } else if (i <= Math.ceil(numSesiones * 0.7)) {
                     fase = "Fase Intermedia / Fortalecimiento y Movilidad";
-                    detalles.push(`• Ejercicios de movilidad activa controlada`);
-                    detalles.push(`• Reeducación muscular e iniciación de cargas graduadas`);
-                    if (!hasPacemaker) detalles.push(`• TENS/EMS de potenciación o recuperación muscular`);
+                    ubicacion = hasPacemaker 
+                        ? `Materia de soporte o banda elástica fijada en zona estable inferior/superior a ${zona}.` 
+                        : `Electrodos sobre el vientre muscular principal de ${zona} para estimulación motora.`;
+                    
+                    acciones.push("• Iniciar ejercicios de movilidad activa asistida (3 series de 10 reps).");
+                    if (!hasPacemaker) acciones.push("• Aplicar EMS (Electroestimulación Muscle/Motor) para reactivar tono postural.");
+                    acciones.push("• Realizar ejercicios de fortalecimiento isométrico y rango de movimiento gradual.");
                     if (selectedPkg === 'premium') {
-                        detalles.push(`• <strong>Terapia Manual Articular:</strong> Movilización específica para rango de movimiento.`);
-                        detalles.push(`• <strong>Higiene Postural:</strong> Corrección de patrones de movimiento y ergonomía.`);
+                        acciones.push("• <strong>[PREMIUM] Terapia Articular Específica:</strong> Deslizamientos articulares de grado II-III para recuperar movilidad.");
+                        acciones.push("• <strong>[PREMIUM] Reeducación Postural:</strong> Corrección táctil y visual frente al espejo de vicios posturales.");
                     }
+
                 } else {
                     fase = "Fase Avanzada / Reacondicionamiento Funcional";
-                    detalles.push(`• Ejercicios funcionales e integración a actividades cotidianas`);
-                    detalles.push(`• Fortalecimiento estabilizador de la zona afectada`);
+                    ubicacion = `Bandas elásticas, pesos ligeros o apoyos en ${zona} y articulaciones adyacentes.`;
+                    
+                    acciones.push("• Ejecutar ejercicios funcionales que simulen la rutina cotidiana o laboral del paciente.");
+                    acciones.push("• Trabajar ejercicios de equilibrio, propiocepción y estabilización del CORE/Eje corporal.");
                     if (selectedPkg === 'premium') {
-                        detalles.push(`• <strong>Programa de Mantenimiento Autónomo:</strong> Prescripción de rutina guiada para el hogar.`);
-                        detalles.push(`• <strong>Evaluación Funcional Final:</strong> Mapeo de control de dolor y alta asistida.`);
+                        acciones.push("• <strong>[PREMIUM] Plan Autónomo Guiado:</strong> Explicar y practicar con el paciente su rutina de mantenimiento casero.");
+                        acciones.push("• <strong>[PREMIUM] Valoración de Alta:</strong> Pruebas de capacidad funcional final y entrega de recomendaciones impresas/digitales.");
                     }
                 }
 
@@ -349,12 +364,20 @@
                 listaSesionesHTML += `
                     <div class="session-item ${isPremItem}">
                         <div class="session-number ${isPremTitle}">Sesión ${i} - <span style="font-weight: normal; color: #475569;">${fase}</span></div>
-                        <div style="margin-top: 4px; line-height: 1.4;">${detalles.join('<br>')}</div>
+                        
+                        <div class="section-block">
+                            <div class="section-title">📍 Ubicación de Elementos:</div>
+                            <div style="color: #334155;">${ubicacion}</div>
+                        </div>
+
+                        <div class="section-block">
+                            <div class="section-title">📋 Procedimiento e Instrucciones:</div>
+                            <div style="line-height: 1.4;">${acciones.join('<br>')}</div>
+                        </div>
                     </div>
                 `;
             }
 
-            // Renderizar encabezado de paquete
             const badgeHTML = selectedPkg === 'premium' 
                 ? `<span class="pkg-badge premium">PAQUETE PREMIUM ⭐</span>`
                 : `<span class="pkg-badge basic">PAQUETE BÁSICO</span>`;
