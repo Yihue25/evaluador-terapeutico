@@ -8,40 +8,59 @@
     <!-- ================================================================= -->
     <!-- 🚀 INICIO: SECCIÓN PARA EL LOGO Y CONFIGURACIÓN PWA (MÓVIL)       -->
     <!-- ================================================================= -->
-    <!-- Enlace al archivo de configuración manifest.json -->
     <link rel="manifest" href="manifest.json">
-
-    <!-- Icono para dispositivos Apple (iOS) cuando se añade a la pantalla de inicio -->
-    <!-- Cambia "icon-192.png" por el nombre de tu archivo de logo cuando lo tengas -->
     <link rel="apple-touch-icon" href="icon-192.png">
-
-    <!-- Icono clásico para pestañas del navegador (Favicon) -->
     <link rel="icon" type="image/png" href="icon-192.png">
-
-    <!-- Color de la barra de estado e interfaz en navegadores móviles -->
     <meta name="theme-color" content="#0f766e">
     <!-- ================================================================= -->
     <!-- 🚀 FIN: SECCIÓN PARA EL LOGO Y CONFIGURACIÓN PWA                 -->
     <!-- ================================================================= -->
 
     <style>
+        /* MODO CLARO (Default) */
         :root {
             --primary: #0f766e;
             --primary-dark: #0d9488;
             --bg: #f8fafc;
             --surface: #ffffff;
             --text: #1e293b;
+            --text-muted: #64748b;
             --border: #cbd5e1;
+            --input-bg: #ffffff;
+            --card-pkg-bg: #f1f5f9;
             --accent: #fef2f2;
             --accent-border: #fca5a5;
             --gold: #d97706;
             --gold-bg: #fffbeb;
             --gold-border: #fef3c7;
+            --session-bg: #f8fafc;
+            --block-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        /* MODO OSCURO */
+        body.dark-mode {
+            --primary: #14b8a6;
+            --primary-dark: #0d9488;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --input-bg: #0f172a;
+            --card-pkg-bg: #334155;
+            --accent: #450a0a;
+            --accent-border: #991b1b;
+            --gold: #fbbf24;
+            --gold-bg: #2d2305;
+            --gold-border: #78350f;
+            --session-bg: #111827;
+            --block-bg: rgba(30, 41, 59, 0.7);
         }
 
         * {
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
 
         body {
@@ -55,16 +74,32 @@
         }
 
         header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, #0f766e, #0d9488);
             color: white;
-            padding: 20px 16px;
+            padding: 16px;
             text-align: center;
             border-radius: 0 0 12px 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: relative;
         }
 
         header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; }
         header p { margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.9; }
+
+        /* Botón de cambio de tema */
+        .theme-toggle-btn {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            width: auto;
+        }
 
         main { padding: 16px; max-width: 650px; margin: 0 auto; width: 100%; flex: 1; }
 
@@ -74,7 +109,7 @@
             padding: 16px;
             border: 1px solid var(--border);
             margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         label {
@@ -93,7 +128,8 @@
             font-size: 0.95rem;
             margin-bottom: 12px;
             outline: none;
-            background-color: #fff;
+            background-color: var(--input-bg);
+            color: var(--text);
         }
 
         .package-selector {
@@ -109,15 +145,14 @@
             padding: 12px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            background: #f1f5f9;
+            background: var(--card-pkg-bg);
         }
 
         .package-card input[type="radio"] { display: none; }
 
         .package-card.selected-basic {
             border-color: var(--primary);
-            background-color: #f0fdf4;
+            background-color: var(--surface);
         }
 
         .package-card.selected-premium {
@@ -126,7 +161,7 @@
         }
 
         .package-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; }
-        .package-desc { font-size: 0.75rem; color: #64748b; }
+        .package-desc { font-size: 0.75rem; color: var(--text-muted); }
 
         .checkbox-group {
             display: grid;
@@ -135,9 +170,9 @@
             margin-bottom: 12px;
         }
 
-        .checkbox-item { font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+        .checkbox-item { font-size: 0.85rem; display: flex; align-items: center; gap: 6px; color: var(--text); }
 
-        button {
+        button.btn-primary {
             width: 100%;
             background-color: var(--primary);
             color: white;
@@ -147,10 +182,7 @@
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
         }
-
-        button:active { background-color: var(--primary-dark); }
 
         #result-card { display: none; }
 
@@ -164,11 +196,13 @@
         }
 
         .pkg-badge.basic { background: #e0f2fe; color: #0369a1; }
+        body.dark-mode .pkg-badge.basic { background: #0369a1; color: #e0f2fe; }
+
         .pkg-badge.premium { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border); }
 
         .session-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: var(--session-bg);
+            border: 1px solid var(--border);
             border-left: 4px solid var(--primary);
             border-radius: 8px;
             padding: 12px;
@@ -178,7 +212,7 @@
 
         .session-item.premium-session {
             border-left-color: var(--gold);
-            background: #fffdf5;
+            background: var(--gold-bg);
         }
 
         .session-number {
@@ -194,22 +228,22 @@
             margin-top: 8px;
             padding: 8px 10px;
             border-radius: 6px;
-            background-color: rgba(255, 255, 255, 0.7);
-            border: 1px dashed #cbd5e1;
+            background-color: var(--block-bg);
+            border: 1px dashed var(--border);
         }
 
         .section-title {
             font-weight: 700;
             font-size: 0.8rem;
             text-transform: uppercase;
-            color: #475569;
+            color: var(--text-muted);
             margin-bottom: 4px;
         }
 
         .alert-box {
             background-color: var(--accent);
             border: 1px solid var(--accent-border);
-            color: #991b1b;
+            color: #f87171;
             padding: 10px;
             border-radius: 6px;
             font-size: 0.85rem;
@@ -221,6 +255,7 @@
 <body>
 
     <header>
+        <button class="theme-toggle-btn" id="themeBtn" onclick="toggleDarkMode()">🌙 Oscuro</button>
         <h1>Evaluador Terapéutico</h1>
         <p>Acompañamiento Domiciliario Asistido</p>
     </header>
@@ -259,7 +294,7 @@
                 <label class="checkbox-item"><input type="checkbox" id="chkElder"> Adulto Mayor / Frágil</label>
             </div>
 
-            <button onclick="evaluarCaso()">Calcular Plan de Sesiones</button>
+            <button class="btn-primary" onclick="evaluarCaso()">Calcular Plan de Sesiones</button>
         </div>
 
         <div class="card" id="result-card">
@@ -267,10 +302,10 @@
             
             <div style="margin-bottom: 12px;">
                 <span style="font-weight: bold; font-size: 1.1rem;" id="outTotalSessions"></span>
-                <div style="font-size: 0.8rem; color: #64748b;" id="outFrequency"></div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);" id="outFrequency"></div>
             </div>
 
-            <div style="font-weight: bold; color: #334155; margin-bottom: 8px; font-size: 0.9rem;">
+            <div style="font-weight: bold; color: var(--text); margin-bottom: 8px; font-size: 0.9rem;">
                 DESGLOSE Y PROTOCOLO SESIÓN POR SESIÓN:
             </div>
 
@@ -281,6 +316,34 @@
     </main>
 
     <script>
+        // =================================================================
+        // 🚀 INICIO: FUNCIÓN MODO CLARO / MODO OSCURO
+        // =================================================================
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('themeBtn');
+
+            if (isDark) {
+                btn.innerHTML = '☀️ Claro';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                btn.innerHTML = '🌙 Oscuro';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Cargar preferencia al iniciar
+        (function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeBtn').innerHTML = '☀️ Claro';
+            }
+        })();
+        // =================================================================
+        // 🚀 FIN: FUNCIÓN MODO CLARO / MODO OSCURO
+        // =================================================================
+
         function selectPackage(type) {
             const cardB = document.getElementById('cardBasic');
             const cardP = document.getElementById('cardPremium');
@@ -462,23 +525,23 @@
 
                 listaSesionesHTML += `
                     <div class="session-item ${isPremItem}">
-                        <div class="session-number ${isPremTitle}">Sesión ${i} - <span style="font-weight: normal; color: #475569;">${fase}</span></div>
+                        <div class="session-number ${isPremTitle}">Sesión ${i} - <span style="font-weight: normal; color: var(--text-muted);">${fase}</span></div>
                         
                         <div class="section-block">
                             <div class="section-title">📍 Aplicación en Zona:</div>
-                            <div style="color: #334155;">${ubicacion}</div>
+                            <div style="color: var(--text);">${ubicacion}</div>
                         </div>
 
                         <div class="section-block">
                             <div class="section-title">⚡ Agentes Físicos y Aparatología:</div>
-                            <div style="color: #334155;">
+                            <div style="color: var(--text);">
                                 ${agentesInfo}
                             </div>
                         </div>
 
                         <div class="section-block">
                             <div class="section-title">📋 Procedimiento e Instrucciones:</div>
-                            <div style="line-height: 1.4;">${acciones.join('<br>')}</div>
+                            <div style="line-height: 1.4; color: var(--text);">${acciones.join('<br>')}</div>
                         </div>
                     </div>
                 `;
