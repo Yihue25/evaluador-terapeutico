@@ -290,12 +290,13 @@
 
         canvas.model-2d-canvas {
             background-color: #f1f5f9;
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border);
             max-width: 100%;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.06);
         }
 
-        body.dark-mode canvas.model-2d-canvas { background-color: #1e293b; }
+        body.dark-mode canvas.model-2d-canvas { background-color: #0f172a; }
 
         .alert-box {
             background-color: var(--accent);
@@ -417,7 +418,7 @@
         }
 
         // =========================================================================
-        // 🎨 MOTOR DE ANIMACIONES 2D
+        // 🎨 MOTOR DE ANIMACIONES 2D AVANZADO CON SOMBREADO Y BIOMECÁNICA
         // =========================================================================
         function toggle2DModel(canvasId, modelType) {
             const container = document.getElementById(`container-${canvasId}`);
@@ -439,6 +440,7 @@
 
                 function animate() {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawFloorAndBackground(ctx, canvas.width, canvas.height);
                     
                     if (modelType === 'tobillo_flex') drawAnkleFlexionAdvanced(ctx, step);
                     else if (modelType === 'tobillo_ball') drawAnkleBallAdvanced(ctx, step);
@@ -459,221 +461,346 @@
             }
         }
 
-        function drawJoint(ctx, x, y, radius = 5) {
+        // --- UTILIDADES DE DIBUJO AVANZADO ---
+        function drawFloorAndBackground(ctx, width, height) {
             const isDark = document.body.classList.contains('dark-mode');
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = isDark ? '#2dd4bf' : '#0f766e';
-            ctx.fill();
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
+            // Rejilla de fondo sutil
+            ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+            ctx.lineWidth = 1;
+            for(let x=0; x<width; x+=20) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+            }
         }
 
-        function drawSegment(ctx, x1, y1, x2, y2, color, width = 6) {
+        function drawShadow(ctx, x, y, radiusX, radiusY) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.12)';
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawOrganicLimb(ctx, x1, y1, x2, y2, thickness, startColor, endColor) {
+            const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+            grad.addColorStop(0, startColor);
+            grad.addColorStop(1, endColor);
+
+            ctx.save();
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = width;
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = thickness;
             ctx.lineCap = 'round';
+            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+            ctx.shadowBlur = 4;
             ctx.stroke();
+            ctx.restore();
         }
 
+        function drawJointCap(ctx, x, y, radius) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#0f766e';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawForceArrow(ctx, x, y, angle, length, label) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(length, 0);
+            ctx.lineTo(length - 6, -4);
+            ctx.moveTo(length, 0);
+            ctx.lineTo(length - 6, 4);
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            if(label) {
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 9px sans-serif';
+                ctx.fillText(label, length + 4, 3);
+            }
+            ctx.restore();
+        }
+
+        // --- MODELOS DETALLADOS ---
         function drawAnkleFlexionAdvanced(ctx, step) {
             const angle = Math.sin(step) * 0.35;
             const isDark = document.body.classList.contains('dark-mode');
-            const bodyColor = isDark ? '#14b8a6' : '#0f766e';
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
+            const accentColor = '#d97706';
 
-            drawSegment(ctx, 80, 25, 150, 90, bodyColor, 8);
-            drawJoint(ctx, 150, 90, 6);
+            drawShadow(ctx, 160, 115, 60, 8);
 
+            // Pierna / Tibia
+            drawOrganicLimb(ctx, 60, 35, 140, 85, 16, primaryColor, primaryColor);
+            drawJointCap(ctx, 140, 85, 8);
+
+            // Pie pivotando
             ctx.save();
-            ctx.translate(150, 90);
+            ctx.translate(140, 85);
             ctx.rotate(angle);
-            drawSegment(ctx, 0, 0, 45, 12, '#d97706', 7);
-            drawSegment(ctx, -10, 8, 45, 12, '#d97706', 5);
-
-            ctx.beginPath();
-            ctx.moveTo(45, 12);
-            ctx.lineTo(-60, -40);
-            ctx.strokeStyle = '#ef4444';
-            ctx.setLineDash([4, 4]);
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.setLineDash([]);
+            
+            // Talón y empeine
+            drawOrganicLimb(ctx, 0, 0, 50, 15, 14, accentColor, '#b45309');
+            // Dedos
+            drawOrganicLimb(ctx, 50, 15, 65, 18, 10, accentColor, accentColor);
+            
+            // Flechas de vector biomecánico
+            drawForceArrow(ctx, 25, 0, -Math.PI / 2, 20, "Fuerza");
             ctx.restore();
         }
 
         function drawAnkleBallAdvanced(ctx, step) {
             const roll = Math.sin(step) * 35;
             const isDark = document.body.classList.contains('dark-mode');
-            const bodyColor = isDark ? '#14b8a6' : '#0f766e';
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
-            const ballX = 150 + roll;
+            const ballX = 140 + roll;
+            const ballY = 100;
+
+            drawShadow(ctx, ballX, 118, 22, 5);
+
+            // Pelota terapéutica con relieve y textura
+            const gradBall = ctx.createRadialGradient(ballX - 4, ballY - 4, 2, ballX, ballY, 18);
+            gradBall.addColorStop(0, '#fbbf24');
+            gradBall.addColorStop(1, '#d97706');
             ctx.beginPath();
-            ctx.arc(ballX, 105, 16, 0, Math.PI * 2);
-            ctx.fillStyle = '#d97706';
+            ctx.arc(ballX, ballY, 18, 0, Math.PI * 2);
+            ctx.fillStyle = gradBall;
             ctx.fill();
-            ctx.strokeStyle = '#b45309';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 1.5;
             ctx.stroke();
 
-            drawSegment(ctx, 80, 20, 115 + roll * 0.4, 70, bodyColor, 7);
-            drawSegment(ctx, 115 + roll * 0.4, 70, ballX, 90, '#d97706', 6);
-            drawJoint(ctx, 115 + roll * 0.4, 70, 5);
-            drawJoint(ctx, ballX, 90, 5);
+            // Pierna apoyada sobre el balón
+            drawOrganicLimb(ctx, 60, 25, 110 + roll * 0.3, 65, 14, primaryColor, primaryColor);
+            drawJointCap(ctx, 110 + roll * 0.3, 65, 7);
 
-            drawSegment(ctx, 30, 122, 270, 122, isDark ? '#475569' : '#cbd5e1', 2);
+            // Pie presionando el balón
+            drawOrganicLimb(ctx, 110 + roll * 0.3, 65, ballX, ballY - 10, 12, '#d97706', '#92400e');
+            drawJointCap(ctx, ballX, ballY - 10, 6);
         }
 
         function drawKneeFlexionAdvanced(ctx, step) {
             const angle = Math.sin(step) * 0.5 + 0.2;
             const isDark = document.body.classList.contains('dark-mode');
-            const bodyColor = isDark ? '#14b8a6' : '#0f766e';
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
-            drawSegment(ctx, 70, 40, 135, 70, bodyColor, 8);
-            drawJoint(ctx, 135, 70, 7);
+            drawShadow(ctx, 135, 118, 50, 6);
 
+            // Muslo
+            drawOrganicLimb(ctx, 60, 35, 135, 65, 18, primaryColor, primaryColor);
+            drawJointCap(ctx, 135, 65, 9);
+
+            // Pantorrilla con ángulo articulado
             ctx.save();
-            ctx.translate(135, 70);
+            ctx.translate(135, 65);
             ctx.rotate(angle);
-            drawSegment(ctx, 0, 0, 55, 45, '#d97706', 7);
-            drawJoint(ctx, 55, 45, 5);
+            drawOrganicLimb(ctx, 0, 0, 60, 45, 14, '#d97706', '#b45309');
+            drawJointCap(ctx, 60, 45, 6);
             ctx.restore();
         }
 
         function drawKneeSquatAdvanced(ctx, step) {
-            const squat = (Math.sin(step) + 1) * 12;
+            const squat = (Math.sin(step) + 1) * 14;
             const isDark = document.body.classList.contains('dark-mode');
-            const bodyColor = isDark ? '#14b8a6' : '#0f766e';
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
-            drawSegment(ctx, 140, 25 + squat, 140, 60 + squat, bodyColor, 8);
-            ctx.beginPath(); ctx.arc(140, 15 + squat, 8, 0, Math.PI * 2); ctx.fillStyle = bodyColor; ctx.fill();
+            drawShadow(ctx, 140, 120, 35 + squat * 0.3, 6);
 
-            drawJoint(ctx, 140, 60 + squat, 6);
+            // Torso estilizado
+            drawOrganicLimb(ctx, 140, 15 + squat, 140, 55 + squat, 20, primaryColor, primaryColor);
+            
+            // Cabeza
+            ctx.beginPath();
+            ctx.arc(140, 6 + squat, 9, 0, Math.PI * 2);
+            ctx.fillStyle = primaryColor;
+            ctx.fill();
 
-            drawSegment(ctx, 140, 60 + squat, 115, 80 + squat * 0.5, '#d97706', 7);
-            drawSegment(ctx, 115, 80 + squat * 0.5, 120, 115, bodyColor, 6);
+            // Cadera
+            drawJointCap(ctx, 140, 55 + squat, 8);
 
-            drawSegment(ctx, 140, 60 + squat, 165, 80 + squat * 0.5, '#d97706', 7);
-            drawSegment(ctx, 165, 80 + squat * 0.5, 160, 115, bodyColor, 6);
+            // Muslos (izq/der)
+            drawOrganicLimb(ctx, 140, 55 + squat, 115, 80 + squat * 0.4, 14, '#d97706', '#b45309');
+            drawOrganicLimb(ctx, 140, 55 + squat, 165, 80 + squat * 0.4, 14, '#d97706', '#b45309');
 
-            drawSegment(ctx, 80, 116, 200, 116, isDark ? '#475569' : '#cbd5e1', 2);
+            // Pantorrillas a los pies
+            drawOrganicLimb(ctx, 115, 80 + squat * 0.4, 120, 115, 12, primaryColor, primaryColor);
+            drawOrganicLimb(ctx, 165, 80 + squat * 0.4, 160, 115, 12, primaryColor, primaryColor);
         }
 
         function drawLumbarCatCowAdvanced(ctx, step) {
             const curve = Math.sin(step) * 18;
             const isDark = document.body.classList.contains('dark-mode');
-            const bodyColor = isDark ? '#14b8a6' : '#0f766e';
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
-            ctx.beginPath(); ctx.arc(70, 60 - curve * 0.3, 9, 0, Math.PI * 2); ctx.fillStyle = bodyColor; ctx.fill();
+            drawShadow(ctx, 140, 118, 70, 7);
 
+            // Cabeza
             ctx.beginPath();
-            ctx.moveTo(80, 60);
-            ctx.quadraticCurveTo(140, 60 + curve, 200, 60);
+            ctx.arc(65, 55 - curve * 0.2, 10, 0, Math.PI * 2);
+            ctx.fillStyle = primaryColor;
+            ctx.fill();
+
+            // Columna Vertebral curva con degradado
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(75, 58);
+            ctx.quadraticCurveTo(140, 58 + curve, 205, 58);
             ctx.strokeStyle = '#d97706';
-            ctx.lineWidth = 7;
+            ctx.lineWidth = 14;
+            ctx.lineCap = 'round';
             ctx.stroke();
+            ctx.restore();
 
-            drawSegment(ctx, 85, 60, 85, 105, bodyColor, 5);
-            drawSegment(ctx, 195, 60, 195, 105, bodyColor, 5);
-            drawJoint(ctx, 85, 60, 5);
-            drawJoint(ctx, 195, 60, 5);
-
-            drawSegment(ctx, 50, 106, 230, 106, isDark ? '#475569' : '#cbd5e1', 2);
+            // Brazos y piernas de soporte
+            drawOrganicLimb(ctx, 85, 58, 85, 110, 10, primaryColor, primaryColor);
+            drawOrganicLimb(ctx, 195, 58, 195, 110, 10, primaryColor, primaryColor);
+            drawJointCap(ctx, 85, 58, 6);
+            drawJointCap(ctx, 195, 58, 6);
         }
 
         function drawLumbarBridgeAdvanced(ctx, step) {
-            const lift = (Math.sin(step) + 1) * 15;
+            const lift = (Math.sin(step) + 1) * 16;
             const isDark = document.body.classList.contains('dark-mode');
-            const bodyColor = isDark ? '#14b8a6' : '#0f766e';
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
-            ctx.beginPath(); ctx.arc(70, 95, 8, 0, Math.PI * 2); ctx.fillStyle = bodyColor; ctx.fill();
+            drawShadow(ctx, 130, 118, 65, 6);
 
-            drawSegment(ctx, 75, 95, 135, 95 - lift, '#d97706', 8);
-            drawJoint(ctx, 135, 95 - lift, 6);
+            // Cabeza y hombros en el suelo
+            ctx.beginPath();
+            ctx.arc(65, 102, 10, 0, Math.PI * 2);
+            ctx.fillStyle = primaryColor;
+            ctx.fill();
 
-            drawSegment(ctx, 135, 95 - lift, 185, 95, bodyColor, 7);
-            drawSegment(ctx, 185, 95, 185, 115, bodyColor, 6);
-            drawJoint(ctx, 185, 95, 5);
+            // Cadera elevándose
+            drawOrganicLimb(ctx, 75, 102, 135, 102 - lift, 16, '#d97706', '#b45309');
+            drawJointCap(ctx, 135, 102 - lift, 8);
 
-            drawSegment(ctx, 50, 116, 220, 116, isDark ? '#475569' : '#cbd5e1', 2);
+            // Muslos a rodillas
+            drawOrganicLimb(ctx, 135, 102 - lift, 185, 95, 14, primaryColor, primaryColor);
+            drawOrganicLimb(ctx, 185, 95, 185, 115, 12, primaryColor, primaryColor);
+            drawJointCap(ctx, 185, 95, 6);
         }
 
         function drawWristFlexionAdvanced(ctx, step) {
             const angle = Math.sin(step) * 0.4;
             const isDark = document.body.classList.contains('dark-mode');
-            const bodyColor = isDark ? '#14b8a6' : '#0f766e';
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
-            drawSegment(ctx, 50, 65, 150, 65, bodyColor, 9);
-            drawJoint(ctx, 150, 65, 7);
+            // Antebrazo
+            drawOrganicLimb(ctx, 40, 65, 150, 65, 18, primaryColor, primaryColor);
+            drawJointCap(ctx, 150, 65, 9);
 
+            // Mano articulada
             ctx.save();
             ctx.translate(150, 65);
             ctx.rotate(angle);
-            drawSegment(ctx, 0, 0, 45, 0, '#d97706', 7);
-            drawSegment(ctx, 45, 0, 60, 5, '#d97706', 4);
+            drawOrganicLimb(ctx, 0, 0, 50, 0, 14, '#d97706', '#b45309');
+            drawOrganicLimb(ctx, 50, 0, 68, 5, 8, '#d97706', '#d97706');
+            drawForceArrow(ctx, 35, 0, Math.PI / 2, 18, "Extensores");
             ctx.restore();
         }
 
         function drawWristGripAdvanced(ctx, step) {
-            const squeeze = Math.sin(step) * 4;
+            const squeeze = Math.sin(step) * 5;
             const isDark = document.body.classList.contains('dark-mode');
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
+            // Pelota de goma comprimible
+            const gradGrip = ctx.createRadialGradient(170, 65, 2, 170, 65, 16 - squeeze);
+            gradGrip.addColorStop(0, '#fca5a5');
+            gradGrip.addColorStop(1, '#ef4444');
             ctx.beginPath();
-            ctx.arc(170, 65, 15 - squeeze, 0, Math.PI * 2);
-            ctx.fillStyle = '#ef4444';
+            ctx.arc(170, 65, 16 - squeeze, 0, Math.PI * 2);
+            ctx.fillStyle = gradGrip;
             ctx.fill();
 
-            drawSegment(ctx, 60, 65, 150, 65, isDark ? '#14b8a6' : '#0f766e', 8);
-            drawJoint(ctx, 150, 65, 6);
+            // Antebrazo
+            drawOrganicLimb(ctx, 50, 65, 145, 65, 18, primaryColor, primaryColor);
+            drawJointCap(ctx, 145, 65, 8);
 
+            // Dedos envolviendo
             ctx.beginPath();
-            ctx.arc(165, 65, 18 - squeeze, -Math.PI * 0.7, Math.PI * 0.7);
+            ctx.arc(165, 65, 20 - squeeze, -Math.PI * 0.6, Math.PI * 0.6);
             ctx.strokeStyle = '#d97706';
-            ctx.lineWidth = 6;
+            ctx.lineWidth = 10;
+            ctx.lineCap = 'round';
             ctx.stroke();
         }
 
         function drawNeurologicalMarchAdvanced(ctx, step) {
             const armSway = Math.sin(step) * 0.4;
-            const legLift = Math.cos(step) * 0.3;
+            const legLift = Math.cos(step) * 0.35;
             const isDark = document.body.classList.contains('dark-mode');
-            const bodyColor = isDark ? '#14b8a6' : '#0f766e';
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
-            ctx.beginPath(); ctx.arc(140, 25, 9, 0, Math.PI * 2); ctx.fillStyle = bodyColor; ctx.fill();
-            drawSegment(ctx, 140, 34, 140, 75, bodyColor, 7);
+            drawShadow(ctx, 140, 120, 25, 5);
 
-            drawSegment(ctx, 140, 42, 110, 60 + armSway * 15, '#d97706', 5);
-            drawSegment(ctx, 140, 42, 170, 60 - armSway * 15, '#d97706', 5);
+            // Cabeza
+            ctx.beginPath();
+            ctx.arc(140, 22, 10, 0, Math.PI * 2);
+            ctx.fillStyle = primaryColor;
+            ctx.fill();
 
-            drawSegment(ctx, 140, 75, 125, 100 + legLift * 10, bodyColor, 6);
-            drawSegment(ctx, 140, 75, 155, 100 - legLift * 10, bodyColor, 6);
+            // Torso
+            drawOrganicLimb(ctx, 140, 32, 140, 75, 18, primaryColor, primaryColor);
 
-            drawJoint(ctx, 140, 75, 5);
+            // Brazos
+            drawOrganicLimb(ctx, 140, 40, 115, 60 + armSway * 15, 10, '#d97706', '#d97706');
+            drawOrganicLimb(ctx, 140, 40, 165, 60 - armSway * 15, 10, '#d97706', '#d97706');
+
+            // Piernas (Marque dinámico)
+            drawOrganicLimb(ctx, 140, 75, 120, 100 + legLift * 12, 13, primaryColor, primaryColor);
+            drawOrganicLimb(ctx, 140, 75, 160, 100 - legLift * 12, 13, primaryColor, primaryColor);
+            drawJointCap(ctx, 140, 75, 7);
         }
 
         function drawFacialGesturesAdvanced(ctx, step) {
-            const smile = Math.sin(step) * 8;
-            const eyeBlink = Math.abs(Math.sin(step * 0.8)) * 3;
+            const smile = Math.sin(step) * 10;
             const isDark = document.body.classList.contains('dark-mode');
+            const primaryColor = isDark ? '#14b8a6' : '#0f766e';
 
-            ctx.beginPath(); ctx.arc(140, 60, 42, 0, Math.PI * 2);
-            ctx.strokeStyle = isDark ? '#14b8a6' : '#0f766e'; ctx.lineWidth = 4; ctx.stroke();
-
+            // Contorno de Rostro Estilizado con Sombra
+            ctx.save();
             ctx.beginPath();
-            ctx.ellipse(122, 50, 5, 4 - eyeBlink, 0, 0, Math.PI * 2);
-            ctx.ellipse(158, 50, 5, 4 - eyeBlink, 0, 0, Math.PI * 2);
-            ctx.fillStyle = isDark ? '#2dd4bf' : '#0f766e'; ctx.fill();
+            ctx.arc(140, 60, 45, 0, Math.PI * 2);
+            ctx.fillStyle = isDark ? '#1e293b' : '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = primaryColor;
+            ctx.lineWidth = 4;
+            ctx.stroke();
 
-            drawSegment(ctx, 115, 40 - smile * 0.3, 130, 42, '#d97706', 3);
-            drawSegment(ctx, 150, 42, 165, 40 - smile * 0.3, '#d97706', 3);
-
+            // Ojos con expresión
             ctx.beginPath();
-            ctx.moveTo(120, 75 - smile * 0.2);
-            ctx.quadraticCurveTo(140, 75 + smile, 160, 75 - smile * 0.2);
-            ctx.strokeStyle = '#d97706'; ctx.lineWidth = 4; ctx.stroke();
+            ctx.arc(120, 50, 4, 0, Math.PI * 2);
+            ctx.arc(160, 50, 4, 0, Math.PI * 2);
+            ctx.fillStyle = primaryColor;
+            ctx.fill();
+
+            // Cejas activas
+            drawOrganicLimb(ctx, 112, 40 - smile * 0.2, 128, 42, 3, '#d97706', '#d97706');
+            drawOrganicLimb(ctx, 152, 42, 168, 40 - smile * 0.2, 3, '#d97706', '#d97706');
+
+            // Sonrisa Dinámica (Boca)
+            ctx.beginPath();
+            ctx.moveTo(118, 75 - smile * 0.2);
+            ctx.quadraticCurveTo(140, 75 + smile, 162, 75 - smile * 0.2);
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            ctx.restore();
         }
 
         // =========================================================================
@@ -785,7 +912,7 @@
         };
 
         // =========================================================================
-        // EVALUACIÓN Y GENERACIÓN DINÁMICA CON VARIACIÓN
+        // EVALUACIÓN Y GENERACIÓN DINÁMICA
         // =========================================================================
         function evaluarCaso() {
             const isPremium = document.getElementById('pkgPremium').checked;
@@ -915,7 +1042,7 @@
                     }
                 }
 
-                // RENDERING DE EJERCICIOS VARIADOS
+                // RENDERING DE EJERCICIOS VARIADOS CON CANVAS DE ALTA DEFINICIÓN
                 let ejerciciosHTML = exList.map((ex, idx) => {
                     let canvasId = `cv_s${i}_ex${idx}`;
                     return `
@@ -978,3 +1105,4 @@
         }
     </script>
 </body>
+</html>
