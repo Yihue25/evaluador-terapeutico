@@ -262,7 +262,7 @@
     <main>
         <div class="card">
             <label for="problemInput">Descripción de la Dolencia / Diagnóstico:</label>
-            <textarea id="problemInput" rows="3" placeholder="Ej: Esclerosis múltiple, fractura de radio, dolor lumbar, esguince de tobillo..."></textarea>
+            <textarea id="problemInput" rows="3" placeholder="Ej: Fractura de tobillo, esclerosis múltiple, dolor lumbar, esguince de rodilla..."></textarea>
 
             <label for="severitySelect">Nivel de Severidad / Evolución:</label>
             <select id="severitySelect">
@@ -375,22 +375,27 @@
             const esEsclerosis = rawText.includes("esclerosis") || rawText.includes("em") || rawText.includes("ela");
             const esFractura = rawText.includes("fractura") || rawText.includes("fisura") || rawText.includes("roto") || rawText.includes("hueso");
             const esRostro = rawText.includes("cara") || rawText.includes("paralisis facial") || rawText.includes("rostro");
+            
+            // Detección Anatómica Específica
+            const esTobilloPie = rawText.includes("tobillo") || rawText.includes("pie") || rawText.includes("peroné") || rawText.includes("perone") || rawText.includes("tibial") || rawText.includes("maleolo");
+            const esRodillaPierna = rawText.includes("rodilla") || rawText.includes("fémur") || rawText.includes("femur") || rawText.includes("tibia");
+            const esManoMuneca = rawText.includes("radio") || rawText.includes("antebrazo") || rawText.includes("muñeca") || rawText.includes("mano") || rawText.includes("dedo");
 
             let zona = "Zona Afectada / Musculatura Global";
-            if (esEsclerosis) {
-                zona = "Extremidades y Control Postural (Neurológico)";
-            } else if (rawText.includes("radio") || rawText.includes("antebrazo") || rawText.includes("muñeca")) {
-                zona = "Antebrazo y Muñeca (Radio)";
+            if (esTobilloPie) {
+                zona = "Articulación del Tobillo y Pie";
+            } else if (esRodillaPierna) {
+                zona = "Articulación de la Rodilla y Pierna";
+            } else if (esManoMuneca) {
+                zona = "Antebrazo, Muñeca y Mano";
             } else if (rawText.includes("lumbar") || rawText.includes("espalda") || rawText.includes("ciatica")) {
                 zona = "Zona Lumbar y Espalda Baja";
-            } else if (rawText.includes("rodilla")) {
-                zona = "Articulación de la Rodilla";
-            } else if (rawText.includes("tobillo") || rawText.includes("pie")) {
-                zona = "Tobillo y Pie";
             } else if (rawText.includes("cuello") || rawText.includes("cervical") || rawText.includes("hombro")) {
                 zona = "Zona Cervical y Hombros";
             } else if (esRostro) {
                 zona = "Musculatura Facial";
+            } else if (esEsclerosis) {
+                zona = "Extremidades y Control Postural (Neurológico)";
             }
 
             let freqTensAgudo = "80 - 120 Hz (TENS Convencional / Analgesia)";
@@ -402,7 +407,7 @@
                 freqTensCronico = "20 - 40 Hz (Reeducación Neuromuscular)";
                 freqEms = "20 - 30 Hz (Activación motora de baja fatiga - Ciclos 1:3)";
             } else if (esFractura) {
-                freqTensAgudo = "100 - 120 Hz (TENS analgésico periférico)";
+                freqTensAgudo = "100 - 120 Hz (TENS analgésico periférico, lejos del foco de fractura)";
                 freqEms = "20 - 30 Hz (Estimulación trófica suave)";
             } else if (esRostro) {
                 freqTensAgudo = "20 - 45 Hz (Estimulación sensitivo-motora facial)";
@@ -433,9 +438,12 @@
                 alertas.push("🧠 PRECAUCIÓN ESCLEROSIS: Evitar fuentes de calor intenso (Fenómeno de Uhthoff).");
                 alertas.push("⚠️ GESTIÓN DE FATIGA: Detener los ejercicios ante el primer signo de fatiga neuromuscular.");
             }
-            if (esFractura) alertas.push("🦴 PRECAUCIÓN FRACTURA: No aplicar presiones ni masaje sobre el trazo de la fractura.");
+            if (esFractura) {
+                alertas.push("🦴 PRECAUCIÓN FRACTURA: No realizar apoyos directos de peso ni carga sin autorización médica de consolidación ósea.");
+                alertas.push("⛔ EVITAR MASAJE DIRECTO: No presionar ni realizar masajes sobre el foco de la fractura.");
+            }
             if (currentPkg === 'premium' && hasPacemaker) alertas.push("⛔ CONTRAINDICACIÓN CRÍTICA: Se omite la electroterapia (TENS/EMS) por marcapasos.");
-            if (hasMetal) alertas.push("⚠️ PRECAUCIÓN METAL: Evitar calor profundo o electrodos directos sobre implantes.");
+            if (hasMetal) alertas.push("⚠️ PRECAUCIÓN METAL: Evitar calor profundo o electrodos directos sobre implantes metálicos o material de osteosíntesis (placas/tornillos).");
             if (hasDiu) alertas.push("ℹ️ NOTA DIU: Evitar aplicación directa en vientre bajo o zona sacra.");
             if (isElder) alertas.push("👵 ADULTO MAYOR: Moderar temperatura e intensidad de los ejercicios.");
 
@@ -450,7 +458,9 @@
 
                 if (i <= Math.ceil(numSesiones * 0.3)) {
                     fase = "Fase Inicial / Control Inflamatorio y Movilidad Pasiva";
-                    ubicacion = `Evaluación y abordaje directo en ${zona}.`;
+                    ubicacion = esFractura && esTobilloPie
+                        ? `Compresa Fría en zonas adyacentes a ${zona} (pantorrilla/empeine), respetando la inmovilización/foco.`
+                        : `Evaluación y aplicación directa en ${zona}.`;
                     
                     if (currentPkg === 'basico') {
                         agentesInfo = `• <strong>Medio Físico (Básico):</strong> ${tempCompresa} (15 min).`;
@@ -460,19 +470,23 @@
                         let electroText = hasPacemaker ? "Omitido por marcapasos." : `TENS Modulado a <strong>${freqTensAgudo}</strong> por 20 min.`;
                         agentesInfo = `• <strong>Medio Físico:</strong> ${tempCompresa} (15 min).<br>• <strong>[PREMIUM] Electroterapia:</strong> ${electroText}`;
                         procedimiento.push("• Aplicación combinada de electroterapia y compresa.");
-                        procedimiento.push(esEsclerosis ? "• <strong>[PREMIUM] Terapia Manual:</strong> Inhibición de puntos gatillo y masaje descontracturante suave." : "• <strong>[PREMIUM] Terapia Manual:</strong> Liberación miofascial ligera.");
+                        procedimiento.push(esTobilloPie ? "• <strong>[PREMIUM] Drenaje Linfático Manual:</strong> En pie, gemelos y rodilla para reducir el edema periarticular." : "• <strong>[PREMIUM] Terapia Manual:</strong> Liberación miofascial ligera.");
                     }
 
                     // EJERCICIOS Y HERRAMIENTAS - FASE INICIAL
-                    if (esEsclerosis) {
-                        ejerciciosDetallados.push("• <strong>Estiramientos de Aductores e Isquiotibiales:</strong> Mantenidos durante 30s sin rebote (Sin instrumento / Asistido).");
-                        ejerciciosDetallados.push("• <strong>Presión Manual con Pelota Antiestrés / Blanda:</strong> Apretar suavemente 10 segs, descanso 10 segs (3 series x 8 reps). <em>[Herramienta: Pelota terapéutica de goma blanda]</em>.");
-                    } else if (esFractura) {
-                        ejerciciosDetallados.push("• <strong>Movilización de Dedos:</strong> Apertura y cierre asistido de mano (2 series x 10 reps).");
-                        ejerciciosDetallados.push("• <strong>Bombeo Venoso:</strong> Elevación de extremidad y flexo-extensión suave. <em>[Herramienta: Almohada / Cojín de elevación]</em>.");
+                    if (esTobilloPie) {
+                        ejerciciosDetallados.push("• <strong>Bombeo Vascular / Movilización de Dedos del Pie:</strong> Flexión y extensión de dedos (3 series x 15 reps).");
+                        ejerciciosDetallados.push("• <strong>Elevación de Extremidad Inferior:</strong> Reposo con la pierna elevada por encima del nivel del corazón para drenar el edema (15-20 min). <em>[Herramienta: Almohada o Cojín Cuña]</em>.");
+                        ejerciciosDetallados.push("• <strong>Dorsiflexión y Plantiflexión Pasiva Suave:</strong> Mover sutilmente el tobillo hacia arriba y abajo dentro del rango libre de dolor (2 series x 10 reps).");
+                    } else if (esManoMuneca) {
+                        ejerciciosDetallados.push("• <strong>Movilización de Dedos de Mano:</strong> Apertura y cierre asistido de mano (2 series x 10 reps).");
+                        ejerciciosDetallados.push("• <strong>Bombeo Venoso de Brazo:</strong> Elevación de la mano y muñeca. <em>[Herramienta: Almohada de elevación]</em>.");
+                    } else if (esEsclerosis) {
+                        ejerciciosDetallados.push("• <strong>Estiramientos de Aductores e Isquiotibiales:</strong> Mantenidos durante 30s sin rebote.");
+                        ejerciciosDetallados.push("• <strong>Presión Manual con Pelota Blanda:</strong> Apretar 10 segs (3 series x 8 reps). <em>[Herramienta: Pelota terapéutica de goma]</em>.");
                     } else {
                         ejerciciosDetallados.push("• <strong>Movilización Pasiva/Activa Asistida:</strong> Flexo-extensión leve (2 series x 10 reps).");
-                        ejerciciosDetallados.push("• <strong>Isométricos Suaves:</strong> Presión contra superficie rígida sin mover la articulación (3 series x 5 segs).");
+                        ejerciciosDetallados.push("• <strong>Isométricos Suaves:</strong> Contracción sin movimiento articular (3 series x 5 segs).");
                     }
 
                 } else if (i <= Math.ceil(numSesiones * 0.7)) {
@@ -487,46 +501,54 @@
                         let electroText = hasPacemaker ? "Omitido por marcapasos." : `TENS / EMS a <strong>${freqTensCronico}</strong> por 20 min.`;
                         agentesInfo = `• <strong>Medio Físico:</strong> Compresa Húmedo-Caliente / Templada (15 min).<br>• <strong>[PREMIUM] Electroterapia:</strong> ${electroText}`;
                         procedimiento.push("• Aplicación de electroterapia y compresa.");
-                        procedimiento.push("• <strong>[PREMIUM] Terapia Manual Avanzada:</strong> Movilización articular específica y tracción leve.");
+                        procedimiento.push("• <strong>[PREMIUM] Terapia Manual Avanzada:</strong> Movilización articular específica de la articulación tibio-astragalina y tracción suave.");
                     }
 
                     // EJERCICIOS Y HERRAMIENTAS - FASE INTERMEDIA
-                    if (esEsclerosis) {
-                        ejerciciosDetallados.push("• <strong>Flexo-extensión de Tobillo y Muñeca:</strong> Usando banda de baja resistencia (3 series x 8 reps). <em>[Herramienta: Banda Elástica Amarilla / Ligera]</em>.");
-                        ejerciciosDetallados.push("• <strong>Control de Tronco y Equilibrio:</strong> Sentado sobre balón sin apoyo de pies (3 series de 30 segs con supervisión). <em>[Herramienta: Pelota Suiza / Fitball]</em>.");
-                    } else if (esFractura) {
-                        ejerciciosDetallados.push("• <strong>Pronosupinación de Muñeca:</strong> Girar suavemente la palma hacia arriba y abajo. <em>[Herramienta: Banda Elástica Amarilla / Suave]</em>.");
-                        ejerciciosDetallados.push("• <strong>Agarre de Precisión:</strong> Moldear y aplastar masa terapéutica (3 series x 10 reps). <em>[Herramienta: Plastilina / Arcilla Terapéutica]</em>.");
+                    if (esTobilloPie) {
+                        ejerciciosDetallados.push("• <strong>Dorsiflexión / Plantiflexión Resistida:</strong> Traccionar el pie hacia el cuerpo con banda elástica (3 series x 10 reps). <em>[Herramienta: Banda Elástica Amarilla / Ligera]</em>.");
+                        ejerciciosDetallados.push("• <strong>Eversión e Inversión de Tobillo:</strong> Mover el pie hacia afuera y adentro contra resistencia ligera (3 series x 10 reps). <em>[Herramienta: Banda Elástica Amarilla]</em>.");
+                        ejerciciosDetallados.push("• <strong>Rodamiento Plantar para Aponeurosis:</strong> Deslizar la planta del pie hacia adelante y atrás sobre una pelota (5 minutos). <em>[Herramienta: Pelota Terapéutica Pequeña / Pelota de Tenis]</em>.");
+                    } else if (esManoMuneca) {
+                        ejerciciosDetallados.push("• <strong>Pronosupinación de Muñeca:</strong> Girar palma hacia arriba y abajo con resistencia ligera. <em>[Herramienta: Banda Elástica Amarilla]</em>.");
+                        ejerciciosDetallados.push("• <strong>Agarre de Precisión:</strong> Moldear y aplastar masa terapéutica. <em>[Herramienta: Plastilina / Arcilla Terapéutica]</em>.");
+                    } else if (esEsclerosis) {
+                        ejerciciosDetallados.push("• <strong>Flexo-extensión de Tobillo y Muñeca:</strong> Usando banda de baja resistencia. <em>[Herramienta: Banda Elástica Amarilla]</em>.");
+                        ejerciciosDetallados.push("• <strong>Control de Tronco y Equilibrio:</strong> Sentado sobre balón sin apoyo de pies. <em>[Herramienta: Pelota Suiza / Fitball]</em>.");
                     } else {
-                        ejerciciosDetallados.push("• <strong>Fortalecimiento Activo:</strong> Extensión y flexión resisted (3 series x 10 reps). <em>[Herramienta: Banda Elástica Roja / Media]</em>.");
-                        ejerciciosDetallados.push("• <strong>Propiocepción y Estabilidad:</strong> Apoyos e inclinaciones leves (3 series x 10 reps). <em>[Herramienta: Pelota de Espuma / Cojín de Equilibrio]</em>.");
+                        ejerciciosDetallados.push("• <strong>Fortalecimiento Activo:</strong> Extensión y flexión resistida (3 series x 10 reps). <em>[Herramienta: Banda Elástica Roja / Media]</em>.");
+                        ejerciciosDetallados.push("• <strong>Propiocepción y Estabilidad:</strong> Apoyos e inclinaciones leves (3 series x 10 reps). <em>[Herramienta: Cojín de Equilibrio]</em>.");
                     }
 
                 } else {
-                    fase = "Fase Avanzada / Fortalecimiento y Funcionalidad";
+                    fase = "Fase Avanzada / Fortalecimiento, Propiocepción y Carga Funcional";
                     ubicacion = `Reintegración biomecánica en ${zona}.`;
                     
                     if (currentPkg === 'basico') {
                         agentesInfo = `• <strong>Medio Físico (Básico):</strong> Crioterapia / Compresa Fría (10 min) al finalizar.`;
-                        procedimiento.push("• Ejecución del plan de fuerza autónomo.");
+                        procedimiento.push("• Ejecución del plan de fuerza y equilibrio autónomo.");
                         procedimiento.push("• Cierre con crioterapia para prevenir inflamación post-ejercicio.");
                     } else {
                         let electroText = hasPacemaker ? "Omitido por marcapasos." : `EMS Potenciación a <strong>${freqEms}</strong> por 15 min.`;
                         agentesInfo = `• <strong>Medio Físico:</strong> Crioterapia (10 min).<br>• <strong>[PREMIUM] Electroterapia:</strong> ${electroText}`;
-                        procedimiento.push("• Electroestimulación focalizada para potenciación motora.");
-                        procedimiento.push("• <strong>[PREMIUM] Reeducación Funcional:</strong> Análisis técnico de patrón de movimiento e integración ergonómica.");
+                        procedimiento.push("• Electroestimulación en tríceps sural (pantorrilla) para potenciación motora.");
+                        procedimiento.push("• <strong>[PREMIUM] Reeducación de la Marcha:</strong> Análisis del apoyo talón-planta-punta y corrección de cojera.");
                     }
 
                     // EJERCICIOS Y HERRAMIENTAS - FASE AVANZADA
-                    if (esEsclerosis) {
-                        ejerciciosDetallados.push("• <strong>Sentadillas Asistidas o Transferencias de Silla:</strong> Levantarse y sentarse con apoyo (3 series x 8 reps). <em>[Herramienta: Silla firme / Banda sujetadora]</em>.");
-                        ejerciciosDetallados.push("• <strong>Pasos sobre Obstáculos Bajos:</strong> Coordinación de marcha (3 series x 10 pasos). <em>[Herramienta: Marcas en suelo / Mini conos]</em>.");
-                    } else if (esFractura) {
-                        ejerciciosDetallados.push("• <strong>Extensión Resistida de Muñeca/Mano:</strong> Tracción progresiva (3 series x 12 reps). <em>[Herramienta: Banda Elástica Verde / Media-Fuerte]</em>.");
+                    if (esTobilloPie) {
+                        ejerciciosDetallados.push("• <strong>Elevación de Talones (Puntas de Pie):</strong> Levantamiento bipodal / unipodal según tolerancia de carga (3 series x 12 reps). <em>[Herramienta: Apoyo en espaldera o silla firme]</em>.");
+                        ejerciciosDetallados.push("• <strong>Propiocepción en Monopodal:</strong> Sostener equilibrio sobre un solo pie (el afectado) durante 20-30 segs (3 series). <em>[Herramienta: Cojín de Equilibrio / Disco Boso / Colchoneta doblada]</em>.");
+                        ejerciciosDetallados.push("• <strong>Caminata Guiada Talón-Punta:</strong> Transferencia correcta de peso durante el paso (3 series x 15 pasos). <em>[Herramienta: Cinta / Marcas en el suelo]</em>.");
+                    } else if (esManoMuneca) {
+                        ejerciciosDetallados.push("• <strong>Extensión Resistida de Muñeca:</strong> Tracción progresiva (3 series x 12 reps). <em>[Herramienta: Banda Elástica Verde / Media-Fuerte]</em>.");
                         ejerciciosDetallados.push("• <strong>Carga Progresiva de Peso:</strong> Levantamiento de peso controlado (3 series x 10 reps). <em>[Herramienta: Mancuerna ligera de 0.5kg a 1kg]</em>.");
+                    } else if (esEsclerosis) {
+                        ejerciciosDetallados.push("• <strong>Sentadillas Asistidas o Transferencias de Silla:</strong> Levantarse y sentarse (3 series x 8 reps). <em>[Herramienta: Silla firme]</em>.");
+                        ejerciciosDetallados.push("• <strong>Pasos sobre Obstáculos Bajos:</strong> Coordinación de marcha (3 series x 10 pasos). <em>[Herramienta: Mini conos / Marcas]</em>.");
                     } else {
-                        ejerciciosDetallados.push("• <strong>Fortalecimiento Funcional Progresivo:</strong> Tracciones e impulsos (3 series x 12 reps). <em>[Herramienta: Banda Elástica Azul o Verde / Alta Resistencia]</em>.");
-                        ejerciciosDetallados.push("• <strong>Carga y Estabilidad Dynamic:</strong> Sentadillas o elevaciones con carga ligera (3 series x 10 reps). <em>[Herramienta: Mancuernas ligeras / Pesas de tobillo]</em>.");
+                        ejerciciosDetallados.push("• <strong>Fortalecimiento Funcional Progresivo:</strong> Tracciones e impulsos (3 series x 12 reps). <em>[Herramienta: Banda Elástica Azul o Verde]</em>.");
+                        ejerciciosDetallados.push("• <strong>Carga y Estabilidad Dinámica:</strong> Elevaciones con carga ligera (3 series x 10 reps). <em>[Herramienta: Mancuernas ligeras / Pesas de tobillo]</em>.");
                     }
                 }
 
