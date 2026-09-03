@@ -35,6 +35,7 @@
             --gold-border: #fef3c7;
             --session-bg: #f8fafc;
             --block-bg: rgba(255, 255, 255, 0.7);
+            --watermark-opacity: 0.06; /* Opacidad para fondo claro */
         }
 
         /* MODO OSCURO */
@@ -55,6 +56,7 @@
             --gold-border: #78350f;
             --session-bg: #111827;
             --block-bg: rgba(30, 41, 59, 0.7);
+            --watermark-opacity: 0.04; /* Opacidad tenue para fondo oscuro */
         }
 
         * {
@@ -71,6 +73,28 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            position: relative;
+        }
+
+        /* ========================================== */
+        /* 🎨 CSS MARCA DE AGUA                       */
+        /* ========================================== */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70vw;
+            max-width: 420px;
+            height: 70vw;
+            max-height: 420px;
+            background-image: url('icon-192.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: var(--watermark-opacity);
+            pointer-events: none; /* Permite hacer clic en los elementos detrás */
+            z-index: 0;
         }
 
         header {
@@ -81,6 +105,7 @@
             border-radius: 0 0 12px 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             position: relative;
+            z-index: 1;
         }
 
         header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; }
@@ -100,7 +125,15 @@
             width: auto;
         }
 
-        main { padding: 16px; max-width: 650px; margin: 0 auto; width: 100%; flex: 1; }
+        main { 
+            padding: 16px; 
+            max-width: 650px; 
+            margin: 0 auto; 
+            width: 100%; 
+            flex: 1; 
+            position: relative;
+            z-index: 1;
+        }
 
         .card {
             background: var(--surface);
@@ -252,6 +285,9 @@
     </style>
 </head>
 <body>
+
+    <!-- MARCA DE AGUA FLOTANTE CENTRADA -->
+    <div class="watermark"></div>
 
     <header>
         <button class="theme-toggle-btn" id="themeBtn" onclick="toggleDarkMode()">🌙 Oscuro</button>
